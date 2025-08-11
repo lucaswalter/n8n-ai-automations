@@ -1,0 +1,254 @@
+{
+  "name": "Super Chat Agent - All Tools",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "chat",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 0],
+      "id": "webhook",
+      "name": "Chat Input",
+      "webhookId": "super-chat"
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o-mini",
+        "messages": {
+          "messageValues": [
+            {
+              "role": "system",
+              "message": "You are a super AI assistant with access to ALL these tools:\n\n**CONTENT CREATION:**\n- generate_image: Create images with brand guidelines\n- write_newsletter: Generate AI newsletters\n- generate_talking_avatar: Create avatar videos\n- repurpose_to_short_form_script: Convert content to viral scripts\n- repurpose_to_twitter_thread: Create Twitter threads\n- write_seo_optimized_listicle: SEO articles\n- short_form_video_script_generator: Viral video scripts\n\n**SCRAPING & DATA:**\n- ai_scraping_pipeline: Scrape any web content\n- firecrawl_scrape_url: Extract content from URLs\n- firecrawl_email_scraper: Extract emails from websites\n- twitter_x_scraping: Scrape tweets\n- ai_news_data_ingestion: Collect AI news\n\n**AUTOMATION:**\n- twitter_reply_guy_agent: Auto-reply to tweets\n- content_repurposing_factory: Repurpose content\n- viral_youtube_video_clipper: Create viral clips\n- reverse_engineer_viral_ai_videos: Analyze viral content\n\n**BUSINESS:**\n- dental_practice_voice_agent: Appointment booking\n- cal_ai_clone_backend: Calorie analysis\n- email_research_report: Send research reports\n\nWhen user asks for something, determine which tool(s) to use and execute them. Always ask for required inputs if not provided."
+            },
+            {
+              "role": "user", 
+              "message": "={{ $json.body.message }}"
+            }
+          ]
+        },
+        "options": {
+          "temperature": 0.7
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1,
+      "position": [300, 0],
+      "id": "ai_router",
+      "name": "AI Router"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "image",
+              "leftValue": "={{ $json.content }}",
+              "rightValue": "image",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "newsletter", 
+              "leftValue": "={{ $json.content }}",
+              "rightValue": "newsletter",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "scrape",
+              "leftValue": "={{ $json.content }}",
+              "rightValue": "scrape",
+              "operator": {
+                "type": "string", 
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "video",
+              "leftValue": "={{ $json.content }}",
+              "rightValue": "video",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [600, 0],
+      "id": "tool_router",
+      "name": "Tool Router"
+    },
+    {
+      "parameters": {
+        "workflowId": "{{ $json.workflow_id }}",
+        "workflowInputs": "={{ $json.inputs }}"
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [900, -200],
+      "id": "execute_image_tool",
+      "name": "Generate Image"
+    },
+    {
+      "parameters": {
+        "workflowId": "{{ $json.workflow_id }}",
+        "workflowInputs": "={{ $json.inputs }}"
+      },
+      "type": "n8n-nodes-base.executeWorkflow", 
+      "typeVersion": 1,
+      "position": [900, -100],
+      "id": "execute_newsletter_tool",
+      "name": "Write Newsletter"
+    },
+    {
+      "parameters": {
+        "workflowId": "{{ $json.workflow_id }}",
+        "workflowInputs": "={{ $json.inputs }}"
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [900, 0],
+      "id": "execute_scrape_tool", 
+      "name": "Scrape Content"
+    },
+    {
+      "parameters": {
+        "workflowId": "{{ $json.workflow_id }}",
+        "workflowInputs": "={{ $json.inputs }}"
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [900, 100],
+      "id": "execute_video_tool",
+      "name": "Create Video"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"response\": $json.result, \"tool_used\": $json.tool_name, \"success\": true } }}"
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1200, 0],
+      "id": "response",
+      "name": "Chat Response"
+    }
+  ],
+  "connections": {
+    "Chat Input": {
+      "main": [
+        [
+          {
+            "node": "AI Router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Router": {
+      "main": [
+        [
+          {
+            "node": "Tool Router", 
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tool Router": {
+      "main": [
+        [
+          {
+            "node": "Generate Image",
+            "type": "main", 
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Write Newsletter",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Scrape Content",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create Video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Image": {
+      "main": [
+        [
+          {
+            "node": "Chat Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write Newsletter": {
+      "main": [
+        [
+          {
+            "node": "Chat Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Scrape Content": {
+      "main": [
+        [
+          {
+            "node": "Chat Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Video": {
+      "main": [
+        [
+          {
+            "node": "Chat Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

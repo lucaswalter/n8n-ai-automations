@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>🤖 AI Workflows Hub</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body { 
+            font-family: Arial; 
+            text-align: center; 
+            padding: 20px; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .container { 
+            max-width: 500px; 
+            margin: 0 auto; 
+            background: rgba(255,255,255,0.1); 
+            padding: 40px; 
+            border-radius: 20px; 
+            backdrop-filter: blur(10px);
+        }
+        h1 { margin-bottom: 30px; font-size: 2.5em; }
+        .app-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 30px 0;
+        }
+        .app-card {
+            background: rgba(255,255,255,0.2);
+            padding: 20px;
+            border-radius: 15px;
+            text-decoration: none;
+            color: white;
+            transition: transform 0.3s;
+        }
+        .app-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255,255,255,0.3);
+        }
+        .app-icon { font-size: 2em; margin-bottom: 10px; }
+        .qr-section {
+            background: rgba(255,255,255,0.2);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+        .qr-code {
+            width: 200px;
+            height: 200px;
+            margin: 15px auto;
+            background: white;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 AI Workflows</h1>
+        <p>Your complete AI automation suite</p>
+        
+        <div class="app-grid">
+            <a href="simple_chat_interface.html" class="app-card">
+                <div class="app-icon">💬</div>
+                <div>AI Chat</div>
+            </a>
+            
+            <a href="mobile-app/expo-qr.html" class="app-card">
+                <div class="app-icon">📱</div>
+                <div>Mobile App</div>
+            </a>
+            
+            <a href="https://bk9xtlbbmlbdn3qpunvshkqe.hooks.n8n.cloud" class="app-card">
+                <div class="app-icon">⚙️</div>
+                <div>n8n Admin</div>
+            </a>
+            
+            <a href="free_api_keys_links.md" class="app-card">
+                <div class="app-icon">🔑</div>
+                <div>API Keys</div>
+            </a>
+        </div>
+
+        <div class="qr-section">
+            <h3>📱 Scan for Mobile App</h3>
+            <div class="qr-code" id="qrcode">Loading...</div>
+            <p>Install Expo Go, then scan QR code</p>
+        </div>
+    </div>
+
+    <script>
+        // Generate QR code for mobile app
+        function generateQR() {
+            const qrDiv = document.getElementById('qrcode');
+            const url = window.location.origin + '/simple_chat_interface.html';
+            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(url)}`;
+            qrDiv.innerHTML = `<img src="${qrUrl}" alt="QR Code" style="width: 180px; height: 180px; border-radius: 10px;">`;
+        }
+        
+        window.onload = generateQR;
+    </script>
+</body>
+</html>

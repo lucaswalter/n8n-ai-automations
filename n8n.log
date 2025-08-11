@@ -1,0 +1,25 @@
+Permissions 0644 for n8n settings file /home/codespace/.n8n/config are too wide. This is ignored for now, but in the future n8n will attempt to change the permissions automatically. To automatically enforce correct permissions now set N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true (recommended), or turn this check off set N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=false.
+Initializing n8n process
+n8n ready on ::, port 5678
+
+There is a deprecation related to your environment variables. Please take the recommended actions to update your configuration:
+ - N8N_RUNNERS_ENABLED -> Running n8n without task runners is deprecated. Task runners will be turned on by default in a future version. Please set `N8N_RUNNERS_ENABLED=true` to enable task runners now and avoid potential issues in the future. Learn more: https://docs.n8n.io/hosting/configuration/task-runners/
+
+[license SDK] Skipping renewal on init: license cert is not initialized
+
+Waiting for tunnel ...
+Tunnel URL: https://bk9xtlbbmlbdn3qpunvshkqe.hooks.n8n.cloud/
+
+IMPORTANT! Do not share with anybody as it would give people access to your n8n instance!
+Version: 1.105.4
+
+Editor is now accessible via:
+https://bk9xtlbbmlbdn3qpunvshkqe.hooks.n8n.cloud
+(node:10747) [DEP0060] DeprecationWarning: The `util._extend` API is deprecated. Please use Object.assign() instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+Problem with execution 1: Cannot read properties of undefined (reading 'disabled'). Aborting.
+Cannot read properties of undefined (reading 'disabled') (execution 1)
+Cannot read properties of undefined (reading 'disabled')
+Problem with execution 2: Cannot read properties of undefined (reading 'disabled'). Aborting.
+Cannot read properties of undefined (reading 'disabled') (execution 2)
+Cannot read properties of undefined (reading 'disabled')

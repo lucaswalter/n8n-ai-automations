@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Super AI Chat</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body { font-family: Arial; margin: 0; padding: 20px; background: #f5f5f5; }
+        .chat-container { max-width: 800px; margin: 0 auto; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .chat-header { background: #007bff; color: white; padding: 20px; text-align: center; }
+        .chat-messages { height: 400px; overflow-y: auto; padding: 20px; }
+        .message { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .user { background: #e3f2fd; text-align: right; }
+        .bot { background: #f1f8e9; }
+        .chat-input { display: flex; padding: 20px; border-top: 1px solid #eee; }
+        input { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-right: 10px; }
+        button { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .loading { color: #666; font-style: italic; }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <h1>🤖 Super AI Assistant</h1>
+            <p>I can generate images, write newsletters, scrape websites, create videos & more!</p>
+        </div>
+        <div class="chat-messages" id="messages">
+            <div class="message bot">
+                Hi! I'm your super AI assistant. I can help you with:
+                <br>• Generate images
+                <br>• Write newsletters  
+                <br>• Scrape websites
+                <br>• Create videos
+                <br>• And much more!
+                <br><br>What would you like me to do?
+            </div>
+        </div>
+        <div class="chat-input">
+            <input type="text" id="messageInput" placeholder="Type your message..." onkeypress="if(event.key==='Enter') sendMessage()">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        const messages = document.getElementById('messages');
+        const input = document.getElementById('messageInput');
+
+        function addMessage(content, isUser = false) {
+            const div = document.createElement('div');
+            div.className = `message ${isUser ? 'user' : 'bot'}`;
+            div.innerHTML = content;
+            messages.appendChild(div);
+            messages.scrollTop = messages.scrollHeight;
+        }
+
+        async function sendMessage() {
+            const message = input.value.trim();
+            if (!message) return;
+
+            addMessage(message, true);
+            input.value = '';
+            
+            addMessage('<div class="loading">🤔 Thinking...</div>');
+
+            try {
+                const response = await fetch('https://bk9xtlbbmlbdn3qpunvshkqe.hooks.n8n.cloud/webhook-test/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message })
+                });
+
+                const data = await response.json();
+                
+                // Remove loading message
+                messages.removeChild(messages.lastChild);
+                
+                addMessage(`✅ **${data.tool_used}**<br><br>${data.response}`);
+            } catch (error) {
+                messages.removeChild(messages.lastChild);
+                addMessage('❌ Error: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>
