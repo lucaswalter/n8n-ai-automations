@@ -1,0 +1,1482 @@
+{
+  "name": "The Recap AI - Insurance Lawyer Lead Gen",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "url"
+            },
+            {
+              "name": "firm"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "e36ba428-a761-41b4-9d48-9917bbe948c2",
+      "name": "process_firm_website_trigger"
+    },
+    {
+      "parameters": {
+        "formTitle": "Process Firm Form",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Url",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Firm",
+              "placeholder": "Firm Name",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.3,
+      "position": [
+        0,
+        -192
+      ],
+      "id": "8a075dc3-b583-4c75-ba46-f1c6c009f023",
+      "name": "process_firm_form_trigger",
+      "webhookId": "d1bd85ae-f7db-46aa-8bb3-e748169a9a2a"
+    },
+    {
+      "parameters": {
+        "formTitle": "Process Directory Page Form",
+        "formDescription": "Paste in a page URL for the Insurance Law Section member directory.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Directory Page Url",
+              "placeholder": "https://insurancelawsection.org/member-directory/?pgnum_paged=2",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.3,
+      "position": [
+        0,
+        -656
+      ],
+      "id": "4b4dbe37-85b7-4790-a71a-250fd1cf0721",
+      "name": "process_directory_page_form_trigger",
+      "webhookId": "24cebe04-4d52-4d9a-9c8e-be6969b2bc93"
+    },
+    {
+      "parameters": {
+        "operation": "scrape",
+        "additionalFields": {
+          "customProperties": "={\n  \"url\": \"{{ $json['Directory Page Url'] }}\",\n  \"formats\": [\n    {\n      \"type\": \"json\",\n      \"prompt\": \"From the Members table on this page, extract one object per visible row. For each row, capture: (1) 'name' from the Company column and (2) 'city' from the City column. Use the exact visible text; exclude headers, UI like 'Details', and blanks. Deduplicate exact repeats (same name + city). Return a top-level array of these objects.\",\n      \"schema\": {\n        \"type\": \"array\",\n        \"description\": \"Array of firm entries extracted from the Members table; one object per single row.\",\n        \"items\": {\n          \"type\": \"object\",\n          \"description\": \"A single firm entry parsed from one row of the table.\",\n          \"properties\": {\n            \"name\": {\n              \"type\": \"string\",\n              \"description\": \"The name of the firm.\"\n            },\n            \"city\": {\n              \"type\": \"string\",\n              \"description\": \"The associated city the firm is located in and based out of.\"\n            }\n          },\n          \"required\": [\"name\", \"city\"],\n          \"additionalProperties\": false\n        }\n      }\n    }\n  ],\n  \"onlyMainContent\": true,\n  \"waitFor\": 1000\n}\n"
+        },
+        "useCustomBody": true,
+        "requestOptions": {}
+      },
+      "type": "@mendable/n8n-nodes-firecrawl.firecrawl",
+      "typeVersion": 1,
+      "position": [
+        368,
+        -656
+      ],
+      "id": "c39401e4-aaf4-4120-9e05-3b7a581d22ce",
+      "name": "scrape_directory_page",
+      "credentials": {
+        "firecrawlApi": {
+          "id": "tTXd52Qm4ZR6N7sq",
+          "name": "Firecrawl"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        976,
+        -656
+      ],
+      "id": "d194f87c-c829-4245-818d-00a3a1e75fbe",
+      "name": "iterate_firms"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1v4m5hG-CF42bGGqBcnZGztn3qrhnJTZNOA9rMv2UE4I",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Law Firms",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1v4m5hG-CF42bGGqBcnZGztn3qrhnJTZNOA9rMv2UE4I/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Firm Name",
+              "lookupValue": "={{ $json.name }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1264,
+        -640
+      ],
+      "id": "c40b0af1-58ad-41fe-8be3-66ec6bdf10da",
+      "name": "try_get_firm",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "C8jshnaDinQz6p7c",
+          "name": "Google Sheets"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "data.json",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        672,
+        -656
+      ],
+      "id": "219b0d6b-d9ce-42b9-805f-df9813d66339",
+      "name": "split_firms"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "mZNPDXjRPDZdHMYD",
+          "mode": "list",
+          "cachedResultName": "YouTube — The Recap AI - Insurance Lawyer Lead Gen"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "url": "={{ ($node[\"search_firm\"].json.data.web.first().url || \"\").match(/^https?:\\/\\/[^/]+/)?.[0] || \"\" }}",
+            "firm": "={{ $node['iterate_firms'].json.name }}"
+          },
+          "matchingColumns": [
+            "url"
+          ],
+          "schema": [
+            {
+              "id": "url",
+              "displayName": "url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "firm",
+              "displayName": "firm",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        2848,
+        -656
+      ],
+      "id": "0cbe932a-8bbe-4167-b787-0053e0ea371a",
+      "name": "process_firm",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "search",
+        "query": "={{ $node['iterate_firms'].json.name }}",
+        "additionalFields": {
+          "customProperties": "={\n  \"location\": \"{{ $node['iterate_firms'].json.city }}\",\n  \"limit\": 1\n}"
+        },
+        "useCustomBody": true,
+        "requestOptions": {}
+      },
+      "type": "@mendable/n8n-nodes-firecrawl.firecrawl",
+      "typeVersion": 1,
+      "position": [
+        1776,
+        -656
+      ],
+      "id": "6fceae49-1d14-48a4-94ec-e44ef0e701bd",
+      "name": "search_firm",
+      "credentials": {
+        "firecrawlApi": {
+          "id": "tTXd52Qm4ZR6N7sq",
+          "name": "Firecrawl"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1v4m5hG-CF42bGGqBcnZGztn3qrhnJTZNOA9rMv2UE4I",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Law Firms",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1v4m5hG-CF42bGGqBcnZGztn3qrhnJTZNOA9rMv2UE4I/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Firm Name": "={{ $node['iterate_firms'].json.name }}",
+            "City": "={{ $node['iterate_firms'].json.city }}",
+            "Website": "={{ ($node['search_firm'].json.data.web.first().url || \"\").match(/^https?:\\/\\/[^/]+/)?.[0] || \"\" }}",
+            "Processed At Date": "={{ $now.format('yyyy-MM-dd') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Firm Name",
+              "displayName": "Firm Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "City",
+              "displayName": "City",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Website",
+              "displayName": "Website",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Processed At Date",
+              "displayName": "Processed At Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2608,
+        -688
+      ],
+      "id": "53cf8eed-9d1e-43b1-acd8-0875b40138b7",
+      "name": "insert_law_firm",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "C8jshnaDinQz6p7c",
+          "name": "Google Sheets"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        2016,
+        384
+      ],
+      "id": "7b156460-c5ea-449f-afa7-8f221f89a04a",
+      "name": "gemini-2.5-flash",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "qp1NlMiIctmGD0Uu",
+          "name": "Google Gemini (PaLM)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "text": "=Given the following information from a search engine result page. I want you to make a decision if this website is for an individual law firm. If so, return an indicator to true. If it is not, for example, if this is some kind of county courthouse or some kind of website for a local jurisdiction, you should return false.\n\n---\nurl: {{ $json.data.web[0].url }}\ntitle: {{ $json.data.web[0].title }}\ndescription: {{ $json.data.web[0].description }}",
+        "attributes": {
+          "attributes": [
+            {
+              "name": "is_law_firm_website",
+              "type": "boolean",
+              "description": "Indicator if the provided website URL and details are to an individual law firm website. ",
+              "required": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "typeVersion": 1.2,
+      "position": [
+        2016,
+        -656
+      ],
+      "id": "e6e78cc0-112e-4828-bf87-a13a11f5036d",
+      "name": "evaluate_website"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d248cc3e-b8f7-4620-8a5a-3ab72571d337",
+              "leftValue": "={{ $json.output.is_law_firm_website }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2368,
+        -672
+      ],
+      "id": "54fea428-d096-45c8-a685-c049f6eb3f34",
+      "name": "check_if_law_firm_website"
+    },
+    {
+      "parameters": {
+        "operation": "search",
+        "query": "=site:{{ $json.domain }} attorney partner associate lawyer profile insurance",
+        "additionalFields": {
+          "customProperties": "{\n  \"limit\": 50\n}"
+        },
+        "useCustomBody": true,
+        "requestOptions": {}
+      },
+      "type": "@mendable/n8n-nodes-firecrawl.firecrawl",
+      "typeVersion": 1,
+      "position": [
+        672,
+        0
+      ],
+      "id": "316934e1-c279-48fe-858e-f99fd000d196",
+      "name": "search_firm_people",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "firecrawlApi": {
+          "id": "tTXd52Qm4ZR6N7sq",
+          "name": "Firecrawl"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1264,
+        0
+      ],
+      "id": "1638d694-cece-4c20-964f-7cd0d3aa5ba1",
+      "name": "iterate_law_firm_pages"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "data.web",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        976,
+        0
+      ],
+      "id": "ce0512b7-afdf-4cbf-8ab9-7bd4483bda40",
+      "name": "split_firm_pages"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d248cc3e-b8f7-4620-8a5a-3ab72571d337",
+              "leftValue": "={{ $json.output.is_profile_page }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1872,
+        -16
+      ],
+      "id": "514a4986-44d1-4fd4-8446-4700b3da92c7",
+      "name": "check_if_profile_page"
+    },
+    {
+      "parameters": {
+        "operation": "scrape",
+        "additionalFields": {
+          "customProperties": "={\n  \"url\": \"{{ $node['iterate_law_firm_pages'].json.url }}\",\n  \"formats\": [\n    {\n      \"type\": \"markdown\"\n    },\n    {\n      \"type\": \"json\",\n      \"prompt\": \"This is a single attorney profile page. Extract exactly one object with these fields: firstName (attorney's given name), lastName (family name), phone (direct or primary office phone on the profile), email (standard email format; unmask common obfuscations like 'name [at] firm.com' to 'name@firm.com'), position (title such as Partner, Associate, Of Counsel), firm (law firm name on the site), areasOfPractice (array of visible practice areas; one per item; deduplicate), and city (primary office location or city shown on the page). Use the exact visible text where applicable and prefer information shown near the profile header or contact section. If a field is not present on the page, omit it.\",\n      \"schema\": {\n        \"type\": \"object\",\n        \"description\": \"Structured attorney profile extracted from a single profile page.\",\n        \"properties\": {\n          \"firstName\": {\n            \"type\": \"string\",\n            \"description\": \"The attorney's first (given) name as written on the profile.\"\n          },\n          \"lastName\": {\n            \"type\": \"string\",\n            \"description\": \"The attorney's last (family) name as written on the profile.\"\n          },\n          \"phone\": {\n            \"type\": \"string\",\n            \"description\": \"Direct phone number for the attorney or the primary office phone displayed on the profile. You MUST always remove the `+1` USA country code prefix or ANY other country code from the extracted phone number. It is critical that you remove the `+` country code from your extraxted phone number.\"\n          },\n          \"email\": {\n            \"type\": \"string\",\n            \"format\": \"email\",\n            \"description\": \"The attorney's email address; if obfuscated (e.g., 'name [at] firm.com'), return in standard form 'name@firm.com'. If the email address cannot be found on the page, return 'Unknown'.\"\n          },\n          \"position\": {\n            \"type\": \"string\",\n            \"description\": \"Role or title (e.g., Partner, Associate, Of Counsel).\"\n          },\n          \"firm\": {\n            \"type\": \"string\",\n            \"description\": \"The law firm name shown on the website/profile.\"\n          },\n          \"areasOfPractice\": {\n            \"type\": \"array\",\n            \"description\": \"List of practice areas associated with the attorney; one string per area; deduplicate exact repeats. This can also be worded as capabilities or the attorney.\",\n            \"items\": { \"type\": \"string\" }\n          },\n          \"city\": {\n            \"type\": \"string\",\n            \"description\": \"The city the attorney is based in (primary office location shown on the profile).\"\n          }\n        },\n        \"required\": [\"firstName\", \"lastName\", \"firm\"],\n        \"additionalProperties\": false\n      }\n    }\n  ],\n  \"onlyMainContent\": true,\n  \"waitFor\": 1200,\n  \"actions\": [\n    { \"type\": \"wait\", \"milliseconds\": 1200 }\n  ]\n}\n"
+        },
+        "useCustomBody": true,
+        "requestOptions": {}
+      },
+      "type": "@mendable/n8n-nodes-firecrawl.firecrawl",
+      "typeVersion": 1,
+      "position": [
+        2144,
+        16
+      ],
+      "id": "34ef3215-585e-46e7-ac35-0508dc719b46",
+      "name": "scrape_profile_page",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "firecrawlApi": {
+          "id": "tTXd52Qm4ZR6N7sq",
+          "name": "Firecrawl"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "text": "=I need you to carefully analyze the provided details below from an attorney's profile page found on their website. Make a decision if this attorney in their profile is a strong match or not a strong match for potentially working together with a full-time commercial mediator who specializes in insurance coverage disputes (like car/auto insurance claims). I'm trying to use this in the pipeline for client outreach, so you should be trying to determine if this is a legal attorney's profile who could work with you to determine whether this is a legal attorney's profile. I work with a mediator for both first-party and third-party insurance coverage disputes across a wide range of policies.\n\nSo the first thing you should look for is obviously going to be the area of practice and capabilities of the layer. Insurance coverage dispuates is the primary area of practice you should look at to see if it is a good match. Then you should analyze closer to determine if it's a strong match or not.\n\n---\nurl: {{ $node['scrape_profile_page'].json.data.metadata.url }}\ntitle: {{ $node['scrape_profile_page'].json.data.metadata.title }}\ndescription: {{ $node['scrape_profile_page'].json.data.metadata.description }}\nfirm: {{ $node['scrape_profile_page'].json.data.json.firm }}\nfirst_name: {{ $node['scrape_profile_page'].json.data.json.firstName }}\nlast_name: {{ $node['scrape_profile_page'].json.data.json.lastName }}\nposition: {{ $node['scrape_profile_page'].json.data.json.position }}\nareas_of_practice {{ $node['scrape_profile_page'].json.data.json.areasOfPractice.join(',') }}\nscraped_page_content: |\n{{ $node['scrape_profile_page'].json.data.markdown }}",
+        "attributes": {
+          "attributes": [
+            {
+              "name": "is_strong_insurance_client_match",
+              "type": "boolean",
+              "description": "Indicator if the provided attorney profile is a strong match as a potential client for insurance mitigation in future cases. ",
+              "required": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "typeVersion": 1.2,
+      "position": [
+        2864,
+        0
+      ],
+      "id": "e834c85c-300f-44be-b077-1cfcaf9cc069",
+      "name": "evaluate_profile_page"
+    },
+    {
+      "parameters": {
+        "text": "=I want you to analyze the profile information extracted from a lawyer/attorney profile page on their website and determine if the email extracted is an individual email address that belongs to that lawyer or attorney.\n\nThis would likely be an email address that matches or is similar to their name.\n\nIf it is an individual email address return true. If it is a comany wide or generic contact email address, return false.\n\n---\nfirm: {{ $node['scrape_profile_page'].json.data.json.firm }}\nfirst_name: {{ $node['scrape_profile_page'].json.data.json.firstName }}\nlast_name: {{ $node['scrape_profile_page'].json.data.json.lastName }}\nposition: {{ $node['scrape_profile_page'].json.data.json.position }}\nemail_address: {{ $node['scrape_profile_page'].json.data.json.email }}",
+        "attributes": {
+          "attributes": [
+            {
+              "name": "is_individual_email_address",
+              "type": "boolean",
+              "description": "Indicator if the provided email address is an email address that belongs to an individual lawyer.",
+              "required": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "typeVersion": 1.2,
+      "position": [
+        3216,
+        0
+      ],
+      "id": "f75289ab-231a-4d43-82c6-3a3703640408",
+      "name": "evaluate_contact_details"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1v4m5hG-CF42bGGqBcnZGztn3qrhnJTZNOA9rMv2UE4I",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1175922305,
+          "mode": "list",
+          "cachedResultName": "People",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1v4m5hG-CF42bGGqBcnZGztn3qrhnJTZNOA9rMv2UE4I/edit#gid=1175922305"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "First Name",
+              "lookupValue": "={{ $json.data.json.firstName }}"
+            },
+            {
+              "lookupColumn": "Last Name",
+              "lookupValue": "={{ $json.data.json.firstName }}"
+            },
+            {
+              "lookupColumn": "Website Profile",
+              "lookupValue": "={{ $json.data.metadata.url }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2368,
+        16
+      ],
+      "id": "414cfa9c-f40c-492b-b902-d8789d994982",
+      "name": "try_get_person",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "C8jshnaDinQz6p7c",
+          "name": "Google Sheets"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "8ba9e5c3-6cab-436b-8aeb-4ca38ded042c",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2576,
+        16
+      ],
+      "id": "93eff40a-39cb-45ab-b9ee-18fe441cc86d",
+      "name": "check_if_person_exists"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1v4m5hG-CF42bGGqBcnZGztn3qrhnJTZNOA9rMv2UE4I",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1175922305,
+          "mode": "list",
+          "cachedResultName": "People",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1v4m5hG-CF42bGGqBcnZGztn3qrhnJTZNOA9rMv2UE4I/edit#gid=1175922305"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "First Name": "={{ $node['scrape_profile_page'].json.data.json.firstName.split(' ').first() }}",
+            "Last Name": "={{ $node['scrape_profile_page'].json.data.json.lastName }}",
+            "Phone Number": "={{ $node['scrape_profile_page'].json.data.json.phone.split('+1').last().trim().split('+').last().trim() }}",
+            "Email Address": "={{ $node['scrape_profile_page'].json.data.json.email }}",
+            "Position": "={{ $node['scrape_profile_page'].json.data.json.position }}",
+            "Firm": "={{ $node['process_firm_set_details'].json.firm }}",
+            "Areas of Practice": "={{ $node['scrape_profile_page'].json.data.json.areasOfPractice.join(' | ') }}",
+            "Website Profile": "={{ $node['scrape_profile_page'].json.data.metadata.url }}",
+            "Is Areas of Practice Match": "={{ $node['evaluate_profile_page'].json.output.is_strong_insurance_client_match }}",
+            "Is Individual Email": "={{ $node['evaluate_contact_details'].json.output.is_individual_email_address }}",
+            "Processed At Date": "={{ $now.format('yyyy-MM-dd') }}",
+            "Email Draft": "=https://docs.google.com/document/d/{{ $json.id }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "First Name",
+              "displayName": "First Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Last Name",
+              "displayName": "Last Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Phone Number",
+              "displayName": "Phone Number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Email Address",
+              "displayName": "Email Address",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Position",
+              "displayName": "Position",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Firm",
+              "displayName": "Firm",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Areas of Practice",
+              "displayName": "Areas of Practice",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Website Profile",
+              "displayName": "Website Profile",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Is Areas of Practice Match",
+              "displayName": "Is Areas of Practice Match",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Is Individual Email",
+              "displayName": "Is Individual Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Processed At Date",
+              "displayName": "Processed At Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Email Draft",
+              "displayName": "Email Draft",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        4656,
+        0
+      ],
+      "id": "314ae68e-630b-4227-9dc0-46580c722e38",
+      "name": "insert_person",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "C8jshnaDinQz6p7c",
+          "name": "Google Sheets"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "78a46838-6adb-4f3c-900c-845b14c041ab",
+              "name": "domain",
+              "value": "={{ ($json.url ?? $json.Url).match(/^https?:\\/\\/([^/]+)/)[1] }}",
+              "type": "string"
+            },
+            {
+              "id": "858851ad-df4c-4622-9a52-5b4efc3379b6",
+              "name": "firm",
+              "value": "={{ $json.firm ?? $json.Firm }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        368,
+        0
+      ],
+      "id": "2fff511d-0582-4064-86a1-65f0d1400856",
+      "name": "process_firm_set_details"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "8ba9e5c3-6cab-436b-8aeb-4ca38ded042c",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1504,
+        -640
+      ],
+      "id": "a76d771c-e8a7-4404-be93-66acb0a4fed8",
+      "name": "check_if_firm_already_exists"
+    },
+    {
+      "parameters": {
+        "text": "=Given the following information from a search engine result page. I want you to make a decision if the provided URL is an individual profile page for a lawyer associate partner attorney at a law firm. I'm wanting to only evaluate these individual profile pages for attorneys at law firms. Return true if that is the case, otherwise if this is something irrelevant like a home page or area of practice for the whole firm, or something that is not related to an individual lawyer or attorney at the firm, you should return false.\n\n---\nurl: {{ $json.url }}\ntitle: {{ $json.title }}\ndescription: {{ $json.description }}",
+        "attributes": {
+          "attributes": [
+            {
+              "name": "is_profile_page",
+              "type": "boolean",
+              "description": "Indicator, if the provided website URL is for an individual profile page for a lawyer, attorney, associate, or partner at a legal law firm. ",
+              "required": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "typeVersion": 1.2,
+      "position": [
+        1504,
+        16
+      ],
+      "id": "baf5c407-082c-4793-bf4b-5aa97ba0fa4e",
+      "name": "evaluate_page"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "326db403-701b-4b0e-9107-1a0cdd175129",
+              "name": "email_markdown",
+              "value": "=Hi {{ $node['scrape_profile_page'].json.data.json.firstName.split(' ').first() }},\n\nI wanted to introduce myself, as I see that insurance litigation is one of your primary practice areas.\n\nMy name is [Jason Cairns](https://www.linkedin.com/in/jason-cairns-83325982), and I am a full-time [commercial mediator](https://www.cairnsmediation.com) specializing in insurance coverage disputes. I mediate both first-party and third-party coverage disputes across a range of policies. As a specialized mediator, clients consistently tell me that my experience with insurance cases helped them reach a settlement.\n\nI hope you’ll consider adding me to your shortlist of mediators when your client is ready to resolve their insurance case.\n\n### Background\nBefore becoming a full-time mediator, I litigated complex commercial cases at large law firms (Sidley Austin LLP, King & Spalding LLP), as well as at a top plaintiffs’-side litigation firm (Reid Collins & Tsai LLP). My practice focused on insurance coverage litigation and insolvency-related directors and officers litigation.\n\nI attended Northwestern University School of Law and completed mediation training through Harvard University and Cornell University.\n\n### What Clients Say\nI’d like to share a few [testimonials](https://www.cairnsmediation.com/#headline-46-323) from clients who appreciated my guidance in settling their cases. I’d welcome the opportunity to do the same for you.\n\n[NEED IMAGE TO INSERT]\n\nLooking forward to staying in touch.  \n\nBest,  \nJason",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3552,
+        0
+      ],
+      "id": "45fd708f-5635-4904-9a75-57767cea8ccb",
+      "name": "write_email"
+    },
+    {
+      "parameters": {
+        "mode": "markdownToHtml",
+        "markdown": "={{ $json.email_markdown }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.markdown",
+      "typeVersion": 1,
+      "position": [
+        3776,
+        0
+      ],
+      "id": "0e14c7ea-c1c6-4d54-a03d-f971aa5f88f4",
+      "name": "convert_to_html"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e7ee03ac-13e3-4fca-a7bc-57c8fc56dc42",
+              "name": "document_name",
+              "value": "={{ $node['scrape_profile_page'].json.data.json.firstName.split(' ').first() }} {{ $node['scrape_profile_page'].json.data.json.lastName }} | {{ $node['process_firm_set_details'].json.firm }} | {{ $node['scrape_profile_page'].json.data.json.email }}",
+              "type": "string"
+            },
+            {
+              "id": "48a07ef2-ae46-4bfc-aa7e-d92a74ef46d6",
+              "name": "html_content",
+              "value": "={{ $json.data }}",
+              "type": "string"
+            },
+            {
+              "id": "22b02fba-ba72-423a-b92f-1191a183a554",
+              "name": "drive_folder_id",
+              "value": "=1JtFXpuRaPLM1IWYOBB16Jzmp9rA4Ri8w",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4000,
+        0
+      ],
+      "id": "f6a919e3-4adb-4383-948b-494eeb27b18c",
+      "name": "set_google_doc_values",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const boundary = 'divider';\nconst docName = $input.first().json.document_name;\nconst folderId = $input.first().json.drive_folder_id;\nconst htmlContent = $input.first().json.html_content;\n\nconst metadata = JSON.stringify({\n  name: docName,\n  mimeType: \"application/vnd.google-apps.document\",\n  parents: [folderId]\n});\n\nconst htmlWithStyles = `\n<!DOCTYPE html>\n<html>\n<head>\n  <meta charset=\"UTF-8\">\n  <style>\n    /* Add bottom margin to block elements for spacing */\n    p,\n    ul,\n    ol,\n    table,\n    h1,\n    h2,\n    h3,\n    h4,\n    h5,\n    h6 {\n      margin-bottom: 10pt;\n    }\n\n    h2 {\n      margin-top: 20pt;\n    }\n\n    /* Prevent margin collapse issues or excessive space inside lists */\n    li {\n       margin-bottom: 2pt; /* Optional: small space between list items */\n    }\n\n    /* Remove margin from the last child within common containers if needed */\n    /* This might be overly aggressive, test without it first */\n    /*\n    body > *:last-child,\n    li > *:last-child {\n       margin-bottom: 0;\n    }\n    */\n  </style>\n</head>\n<body>\n  ${htmlContent}\n</body>\n</html>\n`;\n\n// Construct the body with literal \\r\\n ONLY\nlet body = `--${boundary}\\r\\n`;\nbody += `Content-Type: application/json; charset=UTF-8\\r\\n`;\nbody += `\\r\\n`; // Blank line\nbody += `${metadata}\\r\\n`;\nbody += `--${boundary}\\r\\n`;\nbody += `Content-Type: text/html\\r\\n`;\nbody += `\\r\\n`; // Blank line\nbody += `${htmlWithStyles}\\r\\n`; // Add the HTML content\nbody += `--${boundary}--\\r\\n`; // Final boundary\n\nreturn {\n  rawData: body \n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4224,
+        0
+      ],
+      "id": "db9aa12f-3ad7-4c99-805f-752b983d3ab2",
+      "name": "build_google_request_data"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://www.googleapis.com/upload/drive/v3/files",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "uploadType",
+              "value": "multipart"
+            },
+            {
+              "name": "supportsAllDrives",
+              "value": "true"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "multipart/related; boundary=divider",
+        "body": "={{ $json.rawData }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4448,
+        0
+      ],
+      "id": "1636c0b9-f9cf-4344-abd1-30a3ebf45b78",
+      "name": "create_google_doc",
+      "notesInFlow": true,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "PgwI1k1VFnoEhOi6",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Process Insurance Law Directory Page",
+        "height": 448,
+        "width": 3136
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -96,
+        -832
+      ],
+      "typeVersion": 1,
+      "id": "2e9fcd98-e2cd-4ff1-820a-a49a8fc2fcd8",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Process Law Firm Website",
+        "height": 832,
+        "width": 4982,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -96,
+        -288
+      ],
+      "typeVersion": 1,
+      "id": "40ff31ca-039c-4f07-864e-27e62a09c842",
+      "name": "Sticky Note1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "process_firm_website_trigger": {
+      "main": [
+        [
+          {
+            "node": "process_firm_set_details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "process_firm_form_trigger": {
+      "main": [
+        [
+          {
+            "node": "process_firm_set_details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "process_directory_page_form_trigger": {
+      "main": [
+        [
+          {
+            "node": "scrape_directory_page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "scrape_directory_page": {
+      "main": [
+        [
+          {
+            "node": "split_firms",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "iterate_firms": {
+      "main": [
+        [],
+        [
+          {
+            "node": "try_get_firm",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "split_firms": {
+      "main": [
+        [
+          {
+            "node": "iterate_firms",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "try_get_firm": {
+      "main": [
+        [
+          {
+            "node": "check_if_firm_already_exists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "search_firm": {
+      "main": [
+        [
+          {
+            "node": "evaluate_website",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "process_firm": {
+      "main": [
+        [
+          {
+            "node": "iterate_firms",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "insert_law_firm": {
+      "main": [
+        [
+          {
+            "node": "process_firm",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "gemini-2.5-flash": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "evaluate_website",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "evaluate_page",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "evaluate_profile_page",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "evaluate_contact_details",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "evaluate_website": {
+      "main": [
+        [
+          {
+            "node": "check_if_law_firm_website",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check_if_law_firm_website": {
+      "main": [
+        [
+          {
+            "node": "insert_law_firm",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "iterate_firms",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "search_firm_people": {
+      "main": [
+        [
+          {
+            "node": "split_firm_pages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "iterate_law_firm_pages": {
+      "main": [
+        [],
+        [
+          {
+            "node": "evaluate_page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "split_firm_pages": {
+      "main": [
+        [
+          {
+            "node": "iterate_law_firm_pages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check_if_profile_page": {
+      "main": [
+        [
+          {
+            "node": "scrape_profile_page",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "iterate_law_firm_pages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "scrape_profile_page": {
+      "main": [
+        [
+          {
+            "node": "try_get_person",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "evaluate_profile_page": {
+      "main": [
+        [
+          {
+            "node": "evaluate_contact_details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "try_get_person": {
+      "main": [
+        [
+          {
+            "node": "check_if_person_exists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check_if_person_exists": {
+      "main": [
+        [
+          {
+            "node": "iterate_law_firm_pages",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "evaluate_profile_page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "evaluate_contact_details": {
+      "main": [
+        [
+          {
+            "node": "write_email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "insert_person": {
+      "main": [
+        [
+          {
+            "node": "iterate_law_firm_pages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "process_firm_set_details": {
+      "main": [
+        [
+          {
+            "node": "search_firm_people",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check_if_firm_already_exists": {
+      "main": [
+        [
+          {
+            "node": "iterate_firms",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "search_firm",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "evaluate_page": {
+      "main": [
+        [
+          {
+            "node": "check_if_profile_page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "write_email": {
+      "main": [
+        [
+          {
+            "node": "convert_to_html",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "convert_to_html": {
+      "main": [
+        [
+          {
+            "node": "set_google_doc_values",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "set_google_doc_values": {
+      "main": [
+        [
+          {
+            "node": "build_google_request_data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "build_google_request_data": {
+      "main": [
+        [
+          {
+            "node": "create_google_doc",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "create_google_doc": {
+      "main": [
+        [
+          {
+            "node": "insert_person",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "4fc6cd90-dd05-48fb-9186-843c5ea6c4a2",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "06e5009344f682419c20ccd4ecdcb5223bbb91761882af93ac6d468dbc2cbf8d"
+  },
+  "id": "mZNPDXjRPDZdHMYD",
+  "tags": []
+}

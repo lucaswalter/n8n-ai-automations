@@ -53,3 +53,9 @@ Collection of n8n agents, workflows, templates, and automations created and main
 - [local_podcast_generator.json](https://www.youtube.com/watch?v=mXz-gOBg3uo) - AI-powered podcast generator that scrapes local event news from RSS feeds, processes the content using Firecrawl, and generates engaging podcast scripts with ElevenLabs v3 audio tags. The workflow creates production-ready audio files for local news briefs, perfect for community-focused content creators.
 - [nano_banana_ad_creative_generator.json](https://www.youtube.com/watch?v=TZcn8nOJHH4) - Generates on-brand ad creative using Google's Nano Banana image model (Gemini 2.5 Flash Image)
 - [nano_banana_facebook_ad_thief.json](https://youtu.be/QhDxPK2z5PQ) - Scrapes your competitor's best-performing Facebook and Instagram ads and generates new ad creative that features your own product or service (using Nano Banana).
+
+## AI Automation Deal Breakdowns
+
+### Insurance Lawyer Lead Generation Automation
+
+[deal_breakdown_lawyer_lead_gen.json](https://www.youtube.com/watch?v=RtPUtfxQZYU) - An AI automation for insurance lawyer lead generation that scrapes law firm directories, identifies individual attorney profiles, evaluates their practice areas for insurance coverage disputes, and generates personalized outreach emails. The workflow uses Firecrawl for web scraping, AI evaluation for profile matching, and Google Sheets for lead management, creating a complete pipeline from directory scraping to personalized email generation for insurance mediation services.
