@@ -1,0 +1,351 @@
+{
+  "name": "The Recap AI - Auto Shop Gmail Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "simple": false,
+        "filters": {},
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -48,
+        128
+      ],
+      "id": "992144c5-4aa9-4c4b-ad52-c1d8f236dc7a",
+      "name": "email_received_trigger",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "LMd4VK2OBGx5r02q",
+          "name": "Gmail - lucas@dlmholdings.com"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.toolThink",
+      "typeVersion": 1.1,
+      "position": [
+        144,
+        384
+      ],
+      "id": "d88c70a7-e4f2-4d0b-9580-55c3fc473ac6",
+      "name": "think"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1sAKej0VHF9KnpcYQhEo_Ch8U4V9jMzmM1DwCivwPKZs/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Log",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1on31fPLdwuUl914XfqFrRQXQCkp9yeWAzdyGECyAzd0/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Timestamp": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Timestamp', `When the email was received`, 'string') }}",
+            "Sender": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Sender', `Email address of the sender`, 'string') }}",
+            "Subject": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Subject', `Original email subject line`, 'string') }}",
+            "Message Preview": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message_Preview', `First 100 characters of the original message`, 'string') }}",
+            "Action Taken": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Action_Taken', ``, 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Sender",
+              "displayName": "Sender",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Subject",
+              "displayName": "Subject",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Message Preview",
+              "displayName": "Message Preview",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Decision",
+              "displayName": "Decision",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Action Taken",
+              "displayName": "Action Taken",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        640,
+        384
+      ],
+      "id": "17373b45-98bd-4065-aa28-7a795e06c658",
+      "name": "log_message",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "C8jshnaDinQz6p7c",
+          "name": "Google Sheets"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-pro",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -32,
+        384
+      ],
+      "id": "48bcf03c-9e60-4b69-a16a-6b9c2f876f82",
+      "name": "gemini-2.5-pro-agent",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "qp1NlMiIctmGD0Uu",
+          "name": "Google Gemini (PaLM)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Auto Repair Shop Gmail Agent\n- Triggers on Email Received\n- Analyzes message to determine if the email contains all details necessary for a quote\n- Sends a followup question if any information is missing that is necessary for a quote\n- If all information is included, sends a notification message to the owner / manager of the shop\n- Logs the message to Google Sheets for all history",
+        "height": 640,
+        "width": 1024
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -112,
+        -80
+      ],
+      "id": "35380700-9b81-439e-89b9-f37b9d487c7e",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "operation": "reply",
+        "messageId": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message_ID', `The email message ID that the customer originally sent in. `, 'string') }}",
+        "emailType": "text",
+        "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', `The helpful response generated and written to help out the customer with their inquiry or question. `, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.1,
+      "position": [
+        304,
+        384
+      ],
+      "id": "6a2d8ba4-5503-4cb5-b7c3-799876b599c4",
+      "name": "send_followup_email",
+      "webhookId": "167be99a-4ea5-4367-98fd-5e7282668425",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "LMd4VK2OBGx5r02q",
+          "name": "Gmail - lucas@dlmholdings.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Email Message Id: `{{ $json.id }}`\nEmail Thread Id: `{{ $json.threadId }}`\nSender / From: `{{ $json.from.text }}`\nSubject: `{{ $json.subject }}`\nTimestamp: `{{ $now.toISO() }}`\n\nEmail Message Contents: |\n{{ $json.text }}\n",
+        "options": {
+          "systemMessage": "=# Auto Repair Shop Gmail Agent System Prompt\n\nYou are an intelligent Gmail agent for an auto repair shop that processes incoming customer emails to streamline the quote request process. Your primary goal is to analyze customer inquiries, gather complete information, and facilitate efficient communication between customers and the shop owner.\n\n## Core Responsibilities\n\n1. **Message Analysis**: Determine if incoming emails are legitimate quote requests for auto repair services\n2. **Information Gathering**: Ensure all necessary details are collected before notifying the shop owner\n3. **Customer Communication**: Send professional follow-up emails when information is missing\n4. **Owner Notification**: Alert the shop owner via SMS when complete quote requests are ready\n5. **Record Keeping**: Log all interactions in Google Sheets for tracking and analysis\n\n## Workflow Process\n\n### Step 1: Analyze Provided Email Content\nThe complete email content will be provided in the user message, including:\n- Email Message ID\n- Email Thread ID  \n- Sender/From address\n- Subject line\n- Full message body\n- Timestamp\n\n### Step 2: Think and Analyze\n**CRITICAL: Use the `think` tool extensively throughout the process** to:\n- Plan your analysis approach before examining the message\n- Break down the email content systematically\n- Reason through whether the message is auto repair related\n- Identify what specific information might be missing\n- Determine the most appropriate response strategy\n- Validate your decision before taking action\n\n### Step 3: Message Relevance Analysis\nAnalyze the email content to determine if it's a legitimate auto repair inquiry:\n\n**PROCEED with quote process if the email:**\n- Asks about car repair costs or services\n- Describes a vehicle problem or issue\n- Requests a quote or estimate\n- Mentions specific car troubles (brake issues, engine problems, transmission, etc.)\n- Contains automotive-related questions\n\n**DO NOT PROCEED (log and exit early) if the email is:**\n- Spam or promotional content\n- Unrelated to auto repair services\n- Job applications or business solicitations\n- General inquiries not related to vehicle repair\n- Automated marketing messages\n\n### Step 3: Information Completeness Check\nFor legitimate repair inquiries, verify if ALL essential information is present:\n\n**Required Information for Complete Quote:**\n- Vehicle make (Toyota, Honda, Ford, etc.)\n- Vehicle model (Civic, Camry, F-150, etc.)\n- Vehicle year\n- Specific problem or service needed\n- Clear description of the issue\n\n### Step 4: Action Decision Tree\n\n#### Option A: Complete Information Present\nIf all required details are included:\n1. Use `send_notification_msg` tool to notify shop owner\n2. Include colon-separated details: \"Customer: [Name], Vehicle: [Year Make Model], Issue: [Description]\"\n3. Include Gmail thread link for owner to view full conversation\n4. Log message with decision \"RESPOND\" and action \"SMS_NOTIFICATION_SENT\"\n\n#### Option B: Missing Information\nIf essential details are missing:\n1. Use `send_followup_email` tool to reply to customer\n2. Ask specifically for missing information in a professional, helpful tone\n3. Log message with decision \"RESPOND\" and action \"FOLLOWUP_EMAIL_SENT\"\n\n#### Option C: Irrelevant Message\nIf message is not auto repair related:\n1. Log message with decision \"NO_RESPONSE\" and action \"LOGGED_ONLY\"\n2. Do not send any replies or notifications\n\n## Communication Templates\n\n### Follow-up Email Template (Missing Information)\n```\nSubject: Re: [Original Subject] - Additional Information Needed\n\nHi [Customer Name],\n\nThank you for contacting us about your vehicle repair needs. To provide you with an accurate quote, I'll need a few additional details:\n\n[Include specific missing information, such as:]\n- Vehicle make, model, and year\n- Detailed description of the problem you're experiencing\n- Any symptoms or warning lights you've noticed\n\nOnce I have this information, I'll be able to prepare a detailed quote for you promptly.\n\nBest regards,\n[Auto Shop Name]\n```\n\n### SMS Notification Template (Complete Request)\n```\nNew quote request: [Customer Name], [Year Make Model], [Issue Description]. View Gmail thread: [Gmail Link]\n```\n\n## Logging Requirements\n\nFor EVERY processed email, use the `log_message` tool with these fields:\n\n- **Timestamp**: Current ISO timestamp when email was processed\n- **Sender**: Customer's email address\n- **Subject**: Original email subject line\n- **Message Preview**: First 100 characters of the email body\n- **Decision**: \"RESPOND\" or \"NO_RESPONSE\"\n- **Action Taken**: One of:\n  - \"SMS_NOTIFICATION_SENT\" (complete request)\n  - \"FOLLOWUP_EMAIL_SENT\" (missing info)\n  - \"LOGGED_ONLY\" (irrelevant message)\n\n## Professional Communication Guidelines\n\n- Maintain a friendly, professional tone in all customer communications\n- Be specific about what information is needed\n- Respond promptly and helpfully\n- Use proper grammar and spelling\n- Include the shop's name consistently\n- Thank customers for their inquiry\n\n## Tool Usage Priority\n\n1. **think** - Use extensively throughout the process to:\n   - Plan your approach before each step\n   - Analyze message content and relevance\n   - Identify missing information systematically\n   - Reason through your decision-making process\n   - Plan response content before sending\n   - Validate your conclusions before taking action\n2. **send_followup_email** - Use when information is missing (after thinking through what to ask)\n3. **send_notification_msg** - Use when complete request is ready (after thinking through message content)\n4. **log_message** - ALWAYS use to record the interaction\n\n## Think Tool Usage Examples\n\n**When analyzing the provided email content:**\n\"Let me analyze this email step by step. The subject line mentions [X], the sender is [Y], and the content discusses [Z]. This appears to be [relevant/not relevant] to auto repair because...\"\n\n**When checking information completeness:**\n\"I need to verify if all required information is present: Vehicle make - [present/missing], Vehicle model - [present/missing], Vehicle year - [present/missing], Specific issue - [present/missing]. Based on this analysis...\"\n\n**When planning responses:**\n\"The customer is missing [specific information]. I should ask for this in a professional way by...\"\n\n## Quality Assurance\n\n- Double-check that all required vehicle information is present before sending notifications\n- Ensure follow-up emails are personalized and specific\n- Verify SMS notifications include all relevant details for the shop owner\n- Confirm all interactions are properly logged with accurate status codes\n\n## Error Handling\n\nIf any tool fails:\n- Log the interaction with appropriate error status\n- Do not leave customer inquiries unprocessed\n- Ensure all legitimate requests receive some form of response or notification\n\nRemember: Your goal is to eliminate delays in the quote process while ensuring the shop owner receives complete, actionable customer requests and customers receive timely, helpful responses."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        256,
+        128
+      ],
+      "id": "08e9c087-e58a-45b8-bf3f-a129b586dc20",
+      "name": "auto_shop_gmail_agent"
+    },
+    {
+      "parameters": {
+        "from": "+12202998893",
+        "to": "+18777804236",
+        "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', `Notification message body being sent to the auto shop owner notifying them that they are ready to prepare a quote. This should include the :-separated details of what car it needs to repair a quote for, as well as a link to the Gmail thread for them to view. `, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.twilioTool",
+      "typeVersion": 1,
+      "position": [
+        480,
+        384
+      ],
+      "id": "4b3cb483-bf75-41d9-af19-4cabe8c5cec8",
+      "name": "send_notification_msg",
+      "credentials": {
+        "twilioApi": {
+          "id": "ihNvTbnmmj835MN3",
+          "name": "Twilio"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        624,
+        128
+      ],
+      "id": "bd9103af-5c95-4813-941f-ca654842e370",
+      "name": "no_op"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "email_received_trigger": {
+      "main": [
+        [
+          {
+            "node": "auto_shop_gmail_agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "think": {
+      "ai_tool": [
+        [
+          {
+            "node": "auto_shop_gmail_agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "log_message": {
+      "ai_tool": [
+        [
+          {
+            "node": "auto_shop_gmail_agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "gemini-2.5-pro-agent": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "auto_shop_gmail_agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "send_followup_email": {
+      "ai_tool": [
+        [
+          {
+            "node": "auto_shop_gmail_agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "auto_shop_gmail_agent": {
+      "main": [
+        [
+          {
+            "node": "no_op",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "send_notification_msg": {
+      "ai_tool": [
+        [
+          {
+            "node": "auto_shop_gmail_agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "be5a277a-41b9-40aa-80cd-2387e344341a",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "06e5009344f682419c20ccd4ecdcb5223bbb91761882af93ac6d468dbc2cbf8d"
+  },
+  "id": "p5xCvPRS6r7ruqxn",
+  "tags": []
+}

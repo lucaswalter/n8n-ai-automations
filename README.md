@@ -27,6 +27,10 @@ Collection of n8n agents, workflows, templates, and automations created and main
 
 [ai_gmail_agent.json](https://www.youtube.com/watch?v=Q1Ytc3VdS5o) - AI-powered Gmail automation agent that processes emails, categorizes messages, drafts responses, and manages email workflows using natural language processing and automation.
 
+### Auto Repair Shop Gmail Agent
+
+[auto_repair_shop_gmail_agent.json](https://www.youtube.com/watch?v=pACh3B9pK7M) - Specialized AI Gmail agent designed specifically for auto repair shops to streamline customer quote requests. The agent automatically analyzes incoming emails to determine if they contain complete vehicle repair information, sends professional follow-up emails when details are missing, notifies shop owners via SMS when complete quote requests are ready, and maintains detailed logs in Google Sheets.
+
 ### AI Web Developer Agent
 
 [web_developer_agent.json](https://www.youtube.com/watch?v=ht0zdloIHfA) - AI-powered web developer agent that can scrape existing websites, analyze their content and structure, generate comprehensive Product Requirements Documents (PRDs), and automatically build modern, production-ready websites using Lovable.dev.
