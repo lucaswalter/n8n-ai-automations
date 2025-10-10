@@ -57,6 +57,7 @@ Collection of n8n agents, workflows, templates, and automations created and main
 - [local_podcast_generator.json](https://www.youtube.com/watch?v=mXz-gOBg3uo) - AI-powered podcast generator that scrapes local event news from RSS feeds, processes the content using Firecrawl, and generates engaging podcast scripts with ElevenLabs v3 audio tags. The workflow creates production-ready audio files for local news briefs, perfect for community-focused content creators.
 - [nano_banana_ad_creative_generator.json](https://www.youtube.com/watch?v=TZcn8nOJHH4) - Generates on-brand ad creative using Google's Nano Banana image model (Gemini 2.5 Flash Image)
 - [nano_banana_facebook_ad_thief.json](https://youtu.be/QhDxPK2z5PQ) - Scrapes your competitor's best-performing Facebook and Instagram ads and generates new ad creative that features your own product or service (using Nano Banana).
+- [sora_2_ugc_ecommerce_video_generator.json](https://www.youtube.com/watch?v=-HnyKkP2K2c) - Automatically generates authentic User-Generated Content (UGC) style marketing videos for eCommerce products using OpenAI's Sora 2. The workflow analyzes product images with GPT-4 Vision to create detailed influencer personas, generates multiple authentic 12-second video scripts with frame-by-frame breakdowns using Gemini 2.5 Pro, creates custom first frames adapted to UGC aesthetic, and produces multiple video variations using Sora 2 API. Videos are automatically uploaded to Google Drive.
 
 ## AI Automation Deal Breakdowns
 

@@ -1,0 +1,803 @@
+{
+  "name": "The Recap AI - eCommerce UGC Video Generator",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "eCommerce Product Video Generator",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Product",
+              "fieldType": "file",
+              "multipleFiles": false,
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Product Name",
+              "placeholder": "AG1",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.3,
+      "position": [
+        -64,
+        0
+      ],
+      "id": "f29b30fc-174f-4cd8-91dc-87a2f5f82929",
+      "name": "form_trigger",
+      "webhookId": "5b969756-591f-4d99-b40c-d8711b047689"
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "chatgpt-4o-latest",
+          "mode": "list",
+          "cachedResultName": "CHATGPT-4O-LATEST"
+        },
+        "text": "=**// ROLE & GOAL //**\nYou are an expert Casting Director and Consumer Psychologist. Your entire focus is on understanding people. Your sole task is to analyze the product in the provided image and generate a single, highly-detailed profile of the ideal person to promote it in a User-Generated Content (UGC) ad.\n\nThe final output must ONLY be a description of this person. Do NOT create an ad script, ad concepts, or hooks. Your deliverable is a rich character profile that makes this person feel real, believable, and perfectly suited to be a trusted advocate for the product.\n\n**// INPUT //**\n\nProduct Name: `{{ $node['form_trigger'].json['Product Name'] }}`\n\n**// REQUIRED OUTPUT STRUCTURE //**\nPlease generate the persona profile using the following five-part structure. Be as descriptive and specific as possible within each section.\n\n**I. Core Identity**\n* **Name:**\n* **Age:** (Provide a specific age, not a range)\n* **Sex/Gender:**\n* **Location:** (e.g., \"A trendy suburb of a major tech city like Austin,\" \"A small, artsy town in the Pacific Northwest\")\n* **Occupation:** (Be specific. e.g., \"Pediatric Nurse,\" \"Freelance Graphic Designer,\" \"High School Chemistry Teacher,\" \"Manages a local coffee shop\")\n\n**II. Physical Appearance & Personal Style (The \"Look\")**\n* **General Appearance:** Describe their face, build, and overall physical presence. What is the first impression they give off?\n* **Hair:** Color, style, and typical state (e.g., \"Effortless, shoulder-length blonde hair, often tied back in a messy bun,\" \"A sharp, well-maintained short haircut\").\n* **Clothing Aesthetic:** What is their go-to style? Use descriptive labels. (e.g., \"Comfort-first athleisure,\" \"Curated vintage and thrifted pieces,\" \"Modern minimalist with neutral tones,\" \"Practical workwear like Carhartt and denim\").\n* **Signature Details:** Are there any small, defining features? (e.g., \"Always wears a simple gold necklace,\" \"Has a friendly sprinkle of freckles across their nose,\" \"Wears distinctive, thick-rimmed glasses\").\n\n**III. Personality & Communication (The \"Vibe\")**\n* **Key Personality Traits:** List 5-7 core adjectives that define them (e.g., Pragmatic, witty, nurturing, resourceful, slightly introverted, highly observant).\n* **Demeanor & Energy Level:** How do they carry themselves and interact with the world? (e.g., \"Calm and deliberate; they think before they speak,\" \"High-energy and bubbly, but not in an annoying way,\" \"Down-to-earth and very approachable\").\n* **Communication Style:** How do they talk? (e.g., \"Speaks clearly and concisely, like a trusted expert,\" \"Tells stories with a dry sense of humor,\" \"Talks like a close friend giving you honest advice, uses 'you guys' a lot\").\n\n**IV. Lifestyle & Worldview (The \"Context\")**\n* **Hobbies & Interests:** What do they do in their free time? (e.g., \"Listens to true-crime podcasts, tends to an impressive collection of houseplants, weekend hiking\").\n* **Values & Priorities:** What is most important to them in life? (e.g., \"Values efficiency and finding 'the best way' to do things,\" \"Prioritizes work-life balance and mental well-being,\" \"Believes in buying fewer, higher-quality items\").\n* **Daily Frustrations / Pain Points:** What are the small, recurring annoyances in their life? (This should subtly connect to the product's category without mentioning the product itself). (e.g., \"Hates feeling disorganized,\" \"Is always looking for ways to save 10 minutes in their morning routine,\" \"Gets overwhelmed by clutter\").\n* **Home Environment:** What does their personal space look like? (e.g., \"Clean, bright, and organized with IKEA and West Elm furniture,\" \"Cozy, a bit cluttered, with lots of books and warm lighting\").\n\n**V. The \"Why\": Persona Justification**\n* **Core Credibility:** In one or two sentences, explain the single most important reason why an audience would instantly trust *this specific person's* opinion on this product. (e.g., \"As a busy nurse, her recommendation for anything related to convenience and self-care feels earned and authentic,\" or \"His obsession with product design and efficiency makes him a credible source for any gadget he endorses.\")",
+        "inputType": "base64",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        720,
+        0
+      ],
+      "id": "5d6af3fc-ac57-449a-934a-45879734597c",
+      "name": "analyze_product",
+      "credentials": {
+        "openAiApi": {
+          "id": "7ecUbyMBJInZM14n",
+          "name": "Open AI"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "796c02ea-66be-484c-a333-be4fffbe17db",
+              "name": "prompt",
+              "value": "={{ $json.content }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1008,
+        0
+      ],
+      "id": "513b2b6d-6bc1-4e55-a71e-b816ef10cc5b",
+      "name": "set_model_details"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2c2bbb98-c6e4-4339-971a-2d6487f6bd29",
+              "name": "prompt",
+              "value": "=Master Prompt: Raw 12-Second UGC Video Scripts (Enhanced Edition)\nYou are an expert at creating authentic UGC video scripts that look like someone just grabbed their iPhone and hit record—shaky hands, natural movement, zero production value. No text overlays. No polish. Just real.\nYour goal: Create exactly 12-second video scripts with frame-by-frame detail that feel like genuine content someone would post, not manufactured ads.\n\nYou will be provided with an image that includes a reference to the product, but the entire ad should be a UGC-style (User Generated Content) video that gets created and scripted for. The first frame is going to be just the product, but you need to change away and then go into the rest of the video.\n\nThe Raw iPhone Aesthetic\nWhat we WANT:\n\nHandheld shakiness and natural camera movement\nPhone shifting as they talk/gesture with their hands\nCamera readjusting mid-video (zooming in closer, tilting, refocusing)\nOne-handed filming while using product with the other hand\nNatural bobbing/swaying as they move or talk\nFilming wherever they actually are (messy room, car, bathroom mirror, kitchen counter)\nReal lighting (window light, lamp, overhead—not \"good\" lighting)\nAuthentic imperfections (finger briefly covering lens, focus hunting, unexpected background moments)\n\nWhat we AVOID:\n\nTripods or stable surfaces (no locked-down shots)\nText overlays or on-screen graphics (NONE—let the talking do the work)\nPerfect framing that stays consistent\nProfessional transitions or editing\nClean, styled backgrounds\nMultiple takes stitched together feeling\nScripted-sounding delivery or brand speak\n\n\nThe 12-Second Structure (Loose)\n0-2 seconds:\nStart talking/showing immediately—like mid-conversation\nCamera might still be adjusting as they find the angle\nHook them with a relatable moment or immediate product reveal\n2-9 seconds:\nShow the product in action while continuing to talk naturally\nCamera might move closer, pull back, or shift as they demonstrate\nThis is where the main demo/benefit happens organically\n9-12 seconds:\nWrap up thought while product is still visible\nNatural ending—could trail off, quick recommendation, or casual sign-off\nDialogue must finish by the 12-second mark\n\nCritical: NO Invented Details\n\nOnly use the exact Product Name provided\nOnly reference what's visible in the Product Image\nOnly use the Creator Profile details given\nDo not create slogans, brand messaging, or fake details\nStay true to what the product actually does based on the image\n\n\nYour Inputs\nProduct Image: First image in this conversation\nCreator Profile:\n{{ $node['set_model_details'].json.prompt }}\nProduct Name:\n{{ $node['form_trigger'].json['Product Name'] }}\n\nOutput: 3 Natural Scripts\nThree different authentic approaches:\n\nExcited Discovery - Just found it, have to share\nCasual Recommendation - Talking to camera like a friend\nIn-the-Moment Demo - Showing while using it\n\n\nFormat for each script:\nSCRIPT [#]: [Simple angle in 3-5 words]\nThe energy: [One specific line - excited? Chill? Matter-of-fact? Caffeinated? Half-awake?]\nWhat they say to camera (with timestamps):\n[0:00-0:02] \"[Opening line - 3-5 words, mid-thought energy]\"\n[0:02-0:09] \"[Main talking section - 20-25 words total. Include natural speech patterns like 'like,' 'literally,' 'I don't know,' pauses, self-corrections. Sound conversational, not rehearsed.]\"\n[0:09-0:12] \"[Closing thought - 3-5 words. Must complete by 12-second mark. Can trail off naturally.]\"\nShot-by-Shot Breakdown:\nSECOND 0-1:\n\nCamera position: [Ex: \"Phone held at chest height, slight downward angle, wobbling as they walk\"]\nCamera movement: [Ex: \"Shaky, moving left as they gesture with free hand\"]\nWhat's in frame: [Ex: \"Their face fills 60% of frame, messy bedroom visible behind, lamp in background\"]\nLighting: [Ex: \"Natural window light from right side, creating slight shadow on left cheek\"]\nCreator action: [Ex: \"Walking into frame mid-sentence, looking slightly off-camera then at lens\"]\nProduct visibility: [Ex: \"Product not visible yet / Product visible in left hand, partially out of frame\"]\nAudio cue: [The actual first words being said]\n\nSECOND 1-2:\n\nCamera position: [Ex: \"Still chest height, now more centered as they stop moving\"]\nCamera movement: [Ex: \"Steadying slightly but still has natural hand shake\"]\nWhat's in frame: [Ex: \"Face and shoulders visible, background shows unmade bed\"]\nCreator action: [Ex: \"Reaching off-screen to grab product, eyes following their hand\"]\nProduct visibility: [Ex: \"Product entering frame from bottom right\"]\nAudio cue: [What they're saying during this second]\n\nSECOND 2-3:\n\nCamera position: [Ex: \"Pulling back slightly to waist-level to show more\"]\nCamera movement: [Ex: \"Slight tilt downward, adjusting focus\"]\nWhat's in frame: [Ex: \"Upper body now visible, product held at chest level\"]\nFocus point: [Ex: \"Camera refocusing from face to product\"]\nCreator action: [Ex: \"Holding product up with both hands (phone now propped/gripped awkwardly)\"]\nProduct visibility: [Ex: \"Product front-facing, label clearly visible, natural hand positioning\"]\nAudio cue: [What they're saying]\n\nSECOND 3-4:\n\nCamera position: [Ex: \"Zooming in slightly (digital zoom), frame getting tighter\"]\nCamera movement: [Ex: \"Subtle shake as they demonstrate with one hand\"]\nWhat's in frame: [Ex: \"Product and hands take up 70% of frame, face still partially visible top of frame\"]\nCreator action: [Ex: \"Opening product cap with thumb while talking\"]\nProduct interaction: [Ex: \"Twisting cap, showing interior/applicator\"]\nAudio cue: [What they're saying]\n\nSECOND 4-5:\n\nCamera position: [Ex: \"Shifting angle right as they move product\"]\nCamera movement: [Ex: \"Following their hand movement, losing focus briefly\"]\nWhat's in frame: [Ex: \"Closer shot of product in use, background blurred\"]\nCreator action: [Ex: \"Applying product to face/hand/surface naturally\"]\nProduct interaction: [Ex: \"Dispensing product, showing texture/consistency\"]\nPhysical details: [Ex: \"Product texture visible, their expression reacting to feel/smell\"]\nAudio cue: [What they're saying, might include natural pause or 'um']\n\nSECOND 5-6:\n\nCamera position: [Ex: \"Pulling back to shoulder height\"]\nCamera movement: [Ex: \"Readjusting frame, slight pan left\"]\nWhat's in frame: [Ex: \"Face and product both visible, more balanced composition\"]\nCreator action: [Ex: \"Rubbing product in, looking at camera while demonstrating\"]\nProduct visibility: [Ex: \"Product still in frame on counter/hand, showing before/after\"]\nAudio cue: [What they're saying]\n\nSECOND 6-7:\n\nCamera position: [Ex: \"Stable at eye level (relatively)\"]\nCamera movement: [Ex: \"Natural sway as they shift weight, still handheld\"]\nWhat's in frame: [Ex: \"Mostly face, product visible in periphery\"]\nCreator action: [Ex: \"Touching face/area where product applied, showing result\"]\nBackground activity: [Ex: \"Pet walking by / roommate door visible opening / car passing by window\"]\nAudio cue: [What they're saying]\n\nSECOND 7-8:\n\nCamera position: [Ex: \"Tilting down to show product placement\"]\nCamera movement: [Ex: \"Quick pan down then back up to face\"]\nWhat's in frame: [Ex: \"Product on counter/vanity, their hand reaching for it\"]\nCreator action: [Ex: \"Holding product up one more time, pointing to specific feature\"]\nProduct highlight: [Ex: \"Finger tapping on label/size/specific element\"]\nAudio cue: [What they're saying]\n\nSECOND 8-9:\n\nCamera position: [Ex: \"Back to face level, slightly closer than before\"]\nCamera movement: [Ex: \"Wobbling as they emphasize point with hand gesture\"]\nWhat's in frame: [Ex: \"Face takes up most of frame, product visible bottom right\"]\nCreator action: [Ex: \"Nodding while talking, genuine expression\"]\nProduct visibility: [Ex: \"Product remains in shot naturally, not forced\"]\nAudio cue: [What they're saying, building to conclusion]\n\nSECOND 9-10:\n\nCamera position: [Ex: \"Pulling back to show full setup\"]\nCamera movement: [Ex: \"Slight drop in angle as they relax grip\"]\nWhat's in frame: [Ex: \"Upper body and product together, casual end stance\"]\nCreator action: [Ex: \"Shrugging, smiling, casual body language\"]\nProduct visibility: [Ex: \"Product sitting on counter/still in hand casually\"]\nAudio cue: [Final words beginning]\n\nSECOND 10-11:\n\nCamera position: [Ex: \"Steady-ish at chest height\"]\nCamera movement: [Ex: \"Minimal movement, winding down\"]\nWhat's in frame: [Ex: \"Face and product both clearly visible, relaxed framing\"]\nCreator action: [Ex: \"Looking at product then back at camera, finishing thought\"]\nProduct visibility: [Ex: \"Last clear view of product and packaging\"]\nAudio cue: [Final words]\n\nSECOND 11-12:\n\nCamera position: [Ex: \"Same level, might drift slightly\"]\nCamera movement: [Ex: \"Natural settling, possibly starting to lower phone\"]\nWhat's in frame: [Ex: \"Face, partial product view, casual ending\"]\nCreator action: [Ex: \"Small wave / half-smile / looking away naturally\"]\nHow it ends: [Ex: \"Cuts off mid-movement\" / \"Fade as they lower phone\" / \"Abrupt stop\"]\nFinal audio: [Last word/sound trails off naturally]\n\nOverall Technical Details:\n\nPhone orientation: [Vertical/horizontal?]\nFilming method: [Selfie mode facing them? Back camera in mirror? Someone else holding phone? Propped on stack of books?]\nDominant hand: [Which hand holds phone vs. product?]\nLocation specifics: [What room? Time of day based on lighting? Any notable background elements?]\nAudio environment: [Echo from bathroom? Quiet bedroom? Background TV/music? Street noise?]\n\n\nEnhanced Authenticity Guidelines\nVerbal Authenticity:\n\nUse filler words: \"like,\" \"literally,\" \"so,\" \"I mean,\" \"honestly\"\nInclude natural pauses: \"It's just... really good\"\nSelf-corrections: \"It's really—well actually it's more like...\"\nConversational fragments: \"Yeah so this thing...\"\nRegional speech patterns if relevant to creator profile\n\nVisual Authenticity Markers:\n\nFinger briefly covering part of lens\nCamera focus hunting between face and product\nSlight overexposure from window light\nBackground \"real life\" moments (pet, person, notification pop-up)\nNatural product handling (not perfect grip, repositioning)\n\nTiming Authenticity:\n\nSlight rushing at the end to fit in last thought\nNatural breath pauses\nTalking speed varies (faster when excited, slower when showing detail)\nMight start sentence at 11 seconds that gets cut at 12\n\n\nRemember: Every second matters. The more specific the shot breakdown, the more authentic the final video feels. If a detail seems too polished, make it messier. No text overlays ever. All dialogue must finish by the 12-second mark (can trail off naturally).",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -64,
+        224
+      ],
+      "id": "91f80c5f-6a2a-4228-8935-a44084838a21",
+      "name": "set_build_video_prompts"
+    },
+    {
+      "parameters": {
+        "operation": "binaryToPropery",
+        "binaryPropertyName": "Product",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        176,
+        0
+      ],
+      "id": "db32ee75-123a-4201-a657-c420d35e6b1f",
+      "name": "convert_product_to_base64"
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "data",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        432,
+        0
+      ],
+      "id": "3e441076-59d8-494e-b58d-c4c6ddbc54ea",
+      "name": "convert_product_to_image"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You will be given text that contains many separate prompts / scripts for a UGC short form video. I want you to extract these into an array of strings where each item extracted is the FULL prompt/script. The prompts should remain exactly as they were provided.\n\n---\n{{ $json.candidates[0].content.parts[0].text }}",
+        "hasOutputParser": true,
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        592,
+        224
+      ],
+      "id": "26f3e6a6-dea8-4cb9-b5fd-18689e5a7fda",
+      "name": "extract_prompts"
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n  \"title\": \"Extracted Prompts\",\n  \"description\": \"A schema designed to hold a list of individual prompts that have been extracted from a larger body of text. Use this to format the extracted prompts.\",\n  \"type\": \"object\",\n  \"properties\": {\n    \"prompts\": {\n      \"type\": \"array\",\n      \"description\": \"An array where each element is a single, distinct prompt string that was extracted from the user's input.\",\n      \"items\": {\n        \"type\": \"string\",\n        \"description\": \"A single prompt statement.\"\n      }\n    }\n  },\n  \"required\": [\n    \"prompts\"\n  ]\n}",
+        "autoFix": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        592,
+        448
+      ],
+      "id": "7ca7d1df-4214-45dd-80dd-768838270f21",
+      "name": "prompts-parser"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "output.prompts",
+        "options": {
+          "destinationFieldName": "prompt"
+        }
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        1008,
+        224
+      ],
+      "id": "92036110-ad91-4f8c-b1fb-e991b8482355",
+      "name": "split_prompts"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -64,
+        448
+      ],
+      "id": "02861a04-3fa7-4bc0-b956-c00409daf8bc",
+      "name": "iterate_prompts"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/videos",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "prompt",
+              "value": "={{ $node['iterate_prompts'].json.prompt }}"
+            },
+            {
+              "name": "model",
+              "value": "sora-2"
+            },
+            {
+              "name": "seconds",
+              "value": "12"
+            },
+            {
+              "name": "size",
+              "value": "720x1280"
+            },
+            {
+              "parameterType": "formBinaryData",
+              "name": "input_reference",
+              "inputDataFieldName": "data"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -64,
+        848
+      ],
+      "id": "dd6dc994-b36f-41c7-8d2a-a0abfc4dd0ec",
+      "name": "generate_video",
+      "credentials": {
+        "openAiApi": {
+          "id": "7ecUbyMBJInZM14n",
+          "name": "Open AI"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://api.openai.com/v1/videos/{{ $json.id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        432,
+        848
+      ],
+      "id": "f7695e2f-713e-4726-a34d-a6dd5fb5fd93",
+      "name": "get_video_status",
+      "credentials": {
+        "openAiApi": {
+          "id": "7ecUbyMBJInZM14n",
+          "name": "Open AI"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://api.openai.com/v1/videos/{{ $json.id }}/content",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        848,
+        816
+      ],
+      "id": "78bd2b56-c12a-4cc0-95c1-ae1fad148d00",
+      "name": "get_video",
+      "credentials": {
+        "openAiApi": {
+          "id": "7ecUbyMBJInZM14n",
+          "name": "Open AI"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "6ce95513-f1dd-4105-ab55-de5d073cb0c3",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "completed",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        656,
+        800
+      ],
+      "id": "23e85be7-bb80-4408-8e00-98f00cbfb4a4",
+      "name": "check_status"
+    },
+    {
+      "parameters": {
+        "amount": 15
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        176,
+        848
+      ],
+      "id": "16f02347-42b5-48f4-a148-9be6c2008ede",
+      "name": "delay",
+      "webhookId": "30a9268e-34cc-477e-b843-5e2fb0f76930"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image-preview:generateContent",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"contents\": [{\n    \"parts\": [\n      { \"text\": \"Take the design, layout, and style of [Image A] exactly as it is, and seamlessly adapt it into the aspect ratio of [Image B]. Maintain all the visual elements, proportions, and composition of [Image A], but expand, crop, or extend the background naturally so that the final image perfectly matches the aspect ratio and dimensions of [Image B]. Do not distort or stretch any elements—use intelligent background extension, framing, or subtle composition adjustments to preserve the original design integrity while filling the new canvas size.\" },  \n      {\n        \"inline_data\": {\n          \"mime_type\": \"image/png\",\n          \"data\": \"{{ $node['convert_product_to_base64'].json.data }}\"\n        }\n      },\n{\n        \"inline_data\": {\n          \"mime_type\": \"image/png\",\n          \"data\": \"iVBORw0KGgoAAAANSUhEUgAAAkAAAAQACAIAAACGcHE3AAAACXBIWXMAAA7EAAAOxAGVKw4bAAAExGlUWHRYTUw6Y29tLmFkb2JlLnhtcAAAAAAAPD94cGFja2V0IGJlZ2luPSfvu78nIGlkPSdXNU0wTXBDZWhpSHpyZVN6TlRjemtjOWQnPz4KPHg6eG1wbWV0YSB4bWxuczp4PSdhZG9iZTpuczptZXRhLyc+CjxyZGY6UkRGIHhtbG5zOnJkZj0naHR0cDovL3d3dy53My5vcmcvMTk5OS8wMi8yMi1yZGYtc3ludGF4LW5zIyc+CgogPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9JycKICB4bWxuczpBdHRyaWI9J2h0dHA6Ly9ucy5hdHRyaWJ1dGlvbi5jb20vYWRzLzEuMC8nPgogIDxBdHRyaWI6QWRzPgogICA8cmRmOlNlcT4KICAgIDxyZGY6bGkgcmRmOnBhcnNlVHlwZT0nUmVzb3VyY2UnPgogICAgIDxBdHRyaWI6Q3JlYXRlZD4yMDI1LTEwLTA3PC9BdHRyaWI6Q3JlYXRlZD4KICAgICA8QXR0cmliOkV4dElkPjBmODViMDkwLTNmYjgtNGEzYi1iMjlmLTdjN2Y4MzJjNzY0MDwvQXR0cmliOkV4dElkPgogICAgIDxBdHRyaWI6RmJJZD41MjUyNjU5MTQxNzk1ODA8L0F0dHJpYjpGYklkPgogICAgIDxBdHRyaWI6VG91Y2hUeXBlPjI8L0F0dHJpYjpUb3VjaFR5cGU+CiAgICA8L3JkZjpsaT4KICAgPC9yZGY6U2VxPgogIDwvQXR0cmliOkFkcz4KIDwvcmRmOkRlc2NyaXB0aW9uPgoKIDxyZGY6RGVzY3JpcHRpb24gcmRmOmFib3V0PScnCiAgeG1sbnM6ZGM9J2h0dHA6Ly9wdXJsLm9yZy9kYy9lbGVtZW50cy8xLjEvJz4KICA8ZGM6dGl0bGU+CiAgIDxyZGY6QWx0PgogICAgPHJkZjpsaSB4bWw6bGFuZz0neC1kZWZhdWx0Jz5VbnRpdGxlZCAoNTc2IHggMTAyNCBweCkgLSAxPC9yZGY6bGk+CiAgIDwvcmRmOkFsdD4KICA8L2RjOnRpdGxlPgogPC9yZGY6RGVzY3JpcHRpb24+CgogPHJkZjpE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sCQwAJYEBsCSwABYEhgASwIDYElgACwJDIAlgQGwJDAAlgQGwJLAAFgSGABLAgNgSWAALAkMgCWBAbAkMACWBAbAksAAWBIYAEsCA2BJYAAsCQyAJYEBsCQwAJYEBsCSwABYEhgASwIDYElgACwJDIAlgQGwJDAAlgQGwJLAAFgSGABLAgNgSWAALAkMgCWBAbAkMACWBAbAksAAWBIYAEsCA2BJYAAsCQyAJYEBsCQwAJYEBsCSwABYEhgASwIDYElgACwJDIAlgQGwJDAAlgQGwJLAAFgSGABLAgNgSWAALAkMgCWBAbAkMACWBAbAksAAWBIYAEsCA2BJYAAsCQyAJYEBsCQwAJYEBsCSwABYEhgASwIDYElgACwJDIAlgQGwJDAAlgQGwJLAAFgSGABLAgNgSWAALAkMgCWBAbAkMACWBAbAksAAWBIYAEsCA2BJYAAsCQyAJYEBsCQwAJYEBsCSwABYEhgASwIDYElgACwJDIAlgQGwJDAAlgQGwJLAAFgSGABLAgNgSWAALAkMgCWBAbAkMACWBAbAksAAWBIYAEsCA2BJYAAsCQyAJYEBsCQwAJYEBsCSwABYEhgASwIDYElgACwJDIAlgQGwJDAAlgQGwJLAAFgSGABLAgNgSWAALAkMgCWBAbAkMACWBAbAksAAWBIYAEsCA2BJYAAsCQyAJYEBsCQwAJYEBsCSwABYEhgASwEAAP//7NUBCQAAAICg/6/bEegJBQbAksAAWBIYAEsCA2BJYAAsCQyAJYEBsCQwAJYEBsCSwABYEhgASwIDYElgACwJDIAlgQGwJDAAlgQGwJLAAFgSGABLAgNgSWAALAkMgCWBAbAkMACWBAbAksAAWBIYAEsCA2BJYAAsCQyAJYEBsCQwAJYEBsCSwABYEhgASwIDYElgACwJDIAlgQGwJDAAlgQGwJLAAFgSGABLAgNgSWAALAkMgCWBAbAkMACWBAbAksAAWBIYAEsCA2BJYAAsCQyAJYEBsCQwAJYEBsCSwABYEhgASwIDYElgACwJDIAlgQGwJDAAlgQGwJLAAFgSGABLAgNgSWAALAkMgCWBAbAkMACWBAbAksAAWBIYAEsCA2BJYAAsCQyAJYEBsCQwAJYEBsCSwABYEhgASwIDYElgACwJDIAlgQGwJDAAlgQGwJLAAFgSGABLAgNgSWAALAkMgCWBAbAkMACWBAbAksAAWBIYAEsCA2BJYAAsCQyAJYEBsCQwAJYEBsCSwABYEhgASwIDYElgACwJDIAlgQGwJDAAlgQGwJLAAFgSGABLAgNgSWAALAkMgCWBAbAkMACWBAbAksAAWBIYAEsCA2BJYAAsCQyAJYEBsCQwAJYEBsCSwABYEhgASwIDYElgACwJDIAlgQGwJDAAlgQGwJLAAFgSGABLAgNgSWAALAkMgCWBAbAkMACWBAbAksAAWBIYAEsCA2BJYAAsCQyAJYEBsCQwAJYEBsCSwABYEhgASwIDYElgACwJDIAlgQGwJDAAlgQGwJLAAFgSGABLAgNgSWAALAkMgCWBAbAkMACWBAbAksAAWAoAAP//7NUBCQAAAICg/6/bEegJBQbAksAAWBIYAEsCA2BJYAAsCQyAJYEBsCQwAJYEBsCSwABYEhgASwIDYElgACwJDIAlgQGwJDAAlgQGwJLAAFgSGABLAgNgSWAALAkMgCWBAbAkMACWBAbAksAAWBIYAEsCA2BJYAAsCQyAJYEBsCQwAJYEBsCSwABYEhgASwIDYElgACwJDIAlgQGwJDAAlgQGwJLAAFgSGABLAgNgSWAALAkMgCWBAbAkMACWBAbAksAAWBIYAEsCA2BJYAAsCQyAJYEBsCQwAJYEBsCSwABYEhgASwIDYElgACwJDIAlgQGwJDAAlgQGwJLAAFgSGABLAgNgSWAALAkMgCWBAbAkMACWBAbAksAAWBIYAEsCA2BJYAAsCQyAJYEBsCQwAJYEBsCSwABYEhgASwIDYElgACwJDIAlgQGwJDAAlgQGwJLAAFgSGABLAgNgSWAALAkMgCWBAbAkMACWBAbAksAAWBIYAEsCA2BJYAAsCQyAJYEBsCQwAJYEBsCSwABYEhgASwIDYElgACwJDIAlgQGwJDAAlgQGwJLAAFgSGABLAgNgSWAALAkMgCWBAbAkMACWBAbAksAAWBIYAEsCA2BJYAAsCQyAJYEBsCQwAJYEBsCSwABYEhgASwIDYElgACwJDIAlgQGwJDAAlgQGwJLAAFgSGABLAgNgSWAALAkMgCWBAbAkMACWBAbAksAAWBIYAEsCA2BJYAAsCQyAJYEBsCQwAJYEBsCSwABYEhgASwIDYElgACwJDIAlgQGwJDAAlgQGwJLAAFgSGABLAgNgSWAALAkMgCWBAbAkMACWBAbAksAAWBIYAEsBAAD//+3VAQkAAACAoP+v2xHoCQUGwJLAAFgSGABLAgNgSWAALAkMgCWBAbAkMACWBAbAksAAWBIYAEsCA2BJYAAsCQyAJYEBsCQwAJYEBsCSwABYEhgASwIDYElgACwJDIAlgQGwJDAAlgQGwJLAAFgSGABLAgNgSWAALAkMgCWBAbAkMACWBAbAksAAWBIYAEsCA2BJYAAsCQyAJYEBsCQwAJYEBsCSwABYEhgASwIDYElgACwJDIAlgQGwJDAAlgQGwJLAAFgSGABLAgNgSWAALAkMgCWBAbAkMACWBAbAksAAWBIYAEsCA2BJYAAsCQyAJYEBsCQwAJYEBsCSwABYEhgASwIDYElgACwJDIAlgQGwJDAAlgQGwJLAAFgSGABLAgNgSWAALAkMgCWBAbAkMACWBAbAksAAWBIYAEsCA2BJYAAsCQyAJYEBsCQwAJYEBsCSwABYEhgASwIDYElgACwJDIAlgQGwJDAAlgQGwJLAAFgSGABLAgNgSWAALAkMgCWBAbAkMACWBAbAksAAWBIYAEsCA2BJYAAsCQyAJYEBsCQwAJYEBsCSwABYEhgASwIDYElgACwJDIAlgQGwJDAAlgQGwJLAAFgSGABLAgNgSWAALAkMgCWBAbAkMACWBAbAksAAWBIYAEsCA2BJYAAsCQyAJYEBsCQwAJYEBsCSwABYEhgASwIDYElgACwJDIAlgQGwJDAAlgQGwJLAAFgSGABLAgNgSWAALAkMgCWBAbAkMACWBAbAksAAWBIYAEsCA2BJYAAsCQyAJYEBsCQwAJYEBsCSwABYEhgASwIDYElgACwJDIAlgQGwJDAAlgQGwJLAAFgSGABLAbB5Cu46XMHWAAAAAElFTkSuQmCC\"\n        }\n      }\n    ]\n  }]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        176,
+        592
+      ],
+      "id": "657f3352-c561-4673-ab18-524399361de1",
+      "name": "generate_frame",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "abcMckGk9RG9i0Ba",
+          "name": "Google Gemini"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "524da01b-f8b9-4c2c-9e28-319455903e4d",
+              "name": "=result",
+              "value": "={{ $json.candidates[0].content.parts.filter(item => item.inlineData).first().inlineData.data }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        432,
+        592
+      ],
+      "id": "6f446bde-1f60-4ee5-8665-ebf47fbd5c13",
+      "name": "set_frame_result"
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "result",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        720,
+        592
+      ],
+      "id": "455bc7a4-9365-4480-babc-9e19a1735cf4",
+      "name": "get_frame_image"
+    },
+    {
+      "parameters": {
+        "operation": "resize",
+        "width": 720,
+        "height": 1280,
+        "resizeOption": "ignoreAspectRatio",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.editImage",
+      "typeVersion": 1,
+      "position": [
+        1008,
+        592
+      ],
+      "id": "e53b0785-fccc-4381-a9e4-4bed02386b3b",
+      "name": "resize_image"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-pro",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        592,
+        1088
+      ],
+      "id": "96bedfe8-819e-46d7-9751-c7620671d954",
+      "name": "gemini-2.5-pro",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "qp1NlMiIctmGD0Uu",
+          "name": "Google Gemini (PaLM)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "name": "=UGC Video #{{ $runIndex + 1 }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "https://drive.google.com/drive/u/0/folders/1m9ziBbywD8ufFTJH4haXb60kzSkAujxE",
+          "mode": "url"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1008,
+        816
+      ],
+      "id": "4c4eec9b-766f-405c-b352-73a0e76c7f8c",
+      "name": "upload_video",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "PgwI1k1VFnoEhOi6",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"contents\": [{\n    \"parts\": [\n      { \"text\": {{ JSON.stringify($json.prompt) }} },\n      {\n        \"inline_data\": {\n          \"mime_type\": \"image/png\",\n          \"data\": \"{{ $node['convert_product_to_base64'].json.data }}\"\n        }\n      }\n    ]\n  }]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        176,
+        224
+      ],
+      "id": "e1f34c6c-a707-4746-924e-3ffd9813aa64",
+      "name": "generate_ad_prompts",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "abcMckGk9RG9i0Ba",
+          "name": "Google Gemini"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Sora 2 UGC eCommerce Video Generator\n\n1. Trigger by uploading a simple product photo and a name of your product to start the workflow. \n2. Uses OpenAI's vision API to analyze the image and create a profile for the ideal influencer to promote this e-commerce product.\n3. Then the system uses Gemini 2.5 Pro to take that product photo and the profile of the influencer to write multiple different UGC ad scripts.\n4. Once each script is written, it's then going to split them out and iterate over the scripts one by one to start generating the UGC ad videos with Sora 2's API. ",
+        "height": 1296,
+        "width": 1360,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -160,
+        -256
+      ],
+      "typeVersion": 1,
+      "id": "dede88f1-5acb-41dc-82b8-f233f15a0d23",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Overview & Setup\n\nThis n8n template demonstrates how to automatically generate authentic User-Generated Content (UGC) style marketing videos for eCommerce products using AI. Simply upload a product image, and the workflow creates multiple realistic influencer-style video ads complete with scripts, personas, and video generation.\n\n## Use cases\n* Generate multiple UGC video variations for A/B testing\n* Create authentic-looking product demonstrations for social media\n* Produce influencer-style content without hiring creators\n* Quickly test different marketing angles for new products\n* Scale video content creation for eCommerce catalogs\n\n## Good to know\n* Sora 2 video generation takes approximately 2-3 minutes per 12-second video\n* Each video generation costs approximately $0.50-1.00 USD (check OpenAI pricing for current rates)\n* The workflow generates multiple video variations from a single product image\n* Videos are automatically uploaded to Google Drive upon completion\n* Generated videos are in 720x1280 (9:16) format optimized for social media\n\n## How it works\n1. **Product Analysis**: OpenAI's vision API analyzes the uploaded product image to understand its features, benefits, and target audience\n2. **Persona Creation**: The system generates a detailed profile of the ideal influencer/creator who would authentically promote this product\n3. **Script Generation**: Gemini 2.5 Pro creates multiple authentic UGC video scripts (12 seconds each) with frame-by-frame breakdowns, natural dialogue, and camera movements\n4. **Frame Generation**: For each script, Gemini generates a custom first frame that adapts the product image to match UGC aesthetic and aspect ratio\n5. **Video Production**: Sora 2 API generates the actual video using the script and custom first frame as reference\n6. **Status Monitoring**: The workflow polls the video generation status every 15 seconds until completion\n7. **Upload & Storage**: Completed videos are automatically uploaded to Google Drive with organized naming\n\n## How to use\n1. Click the form trigger URL to access the submission form\n2. Upload your product image (works best with clean product shots on white/neutral backgrounds)\n3. Enter the product name\n4. Submit the form and wait for the workflow to complete\n5. Find your generated UGC videos in the specified Google Drive folder\n6. Each run produces multiple video variations you can test\n\n## Requirements\n* **OpenAI API** account with Sora 2 access for video generation and GPT-4 Vision\n* **Google Gemini API** account for script generation and image adaptation\n* **Google Drive** account for video storage\n* Sufficient API credits for video generation (budget accordingly)\n\n## Customizing this workflow\n* Adjust the **video duration** in the generate_video node (currently set to 12 seconds)\n* Modify the **persona prompt** in analyze_product node to target different audience demographics\n* Change the **script style** in set_build_video_prompts node for different UGC aesthetics (excited discovery, casual recommendation, etc.)\n* Update the **Google Drive folder** in upload_video node to organize videos by campaign\n* Add **additional processing** nodes for video editing, subtitle generation, or thumbnail creation\n* Modify the **aspect ratio** in resize_image node for different platforms (1:1 for Instagram feed, 16:9 for YouTube, etc.)",
+        "height": 1296,
+        "width": 560
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -736,
+        -256
+      ],
+      "typeVersion": 1,
+      "id": "fb7a61b0-26b5-49ee-ace3-86f4cf3fb207",
+      "name": "Sticky Note1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "form_trigger": {
+      "main": [
+        [
+          {
+            "node": "convert_product_to_base64",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "analyze_product": {
+      "main": [
+        [
+          {
+            "node": "set_model_details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "set_model_details": {
+      "main": [
+        [
+          {
+            "node": "set_build_video_prompts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "set_build_video_prompts": {
+      "main": [
+        [
+          {
+            "node": "generate_ad_prompts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "convert_product_to_base64": {
+      "main": [
+        [
+          {
+            "node": "convert_product_to_image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "convert_product_to_image": {
+      "main": [
+        [
+          {
+            "node": "analyze_product",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "prompts-parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "extract_prompts",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "extract_prompts": {
+      "main": [
+        [
+          {
+            "node": "split_prompts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "split_prompts": {
+      "main": [
+        [
+          {
+            "node": "iterate_prompts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "iterate_prompts": {
+      "main": [
+        [],
+        [
+          {
+            "node": "generate_frame",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "generate_video": {
+      "main": [
+        [
+          {
+            "node": "delay",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_video_status": {
+      "main": [
+        [
+          {
+            "node": "check_status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check_status": {
+      "main": [
+        [
+          {
+            "node": "get_video",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "delay",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "delay": {
+      "main": [
+        [
+          {
+            "node": "get_video_status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "generate_frame": {
+      "main": [
+        [
+          {
+            "node": "set_frame_result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "set_frame_result": {
+      "main": [
+        [
+          {
+            "node": "get_frame_image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_frame_image": {
+      "main": [
+        [
+          {
+            "node": "resize_image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_video": {
+      "main": [
+        [
+          {
+            "node": "upload_video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "resize_image": {
+      "main": [
+        [
+          {
+            "node": "generate_video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "gemini-2.5-pro": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "extract_prompts",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "prompts-parser",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "upload_video": {
+      "main": [
+        [
+          {
+            "node": "iterate_prompts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "generate_ad_prompts": {
+      "main": [
+        [
+          {
+            "node": "extract_prompts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "18b17219-3beb-4918-8677-6d01d518e1fb",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "06e5009344f682419c20ccd4ecdcb5223bbb91761882af93ac6d468dbc2cbf8d"
+  },
+  "id": "sKCExeJOJmiwSr75",
+  "tags": []
+}
