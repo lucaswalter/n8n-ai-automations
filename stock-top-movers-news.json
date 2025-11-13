@@ -1,0 +1,140 @@
+{
+  "name": "Stock Top Movers with News Catalyst",
+  "nodes": [
+    {
+      "parameters": {
+        "url": "https://www.alphavantage.co/query?function=TOP_GAINERS_LOSERS&apikey=AS9OQDLEM7W82638&region=US",
+        "options": {}
+      },
+      "id": "049808de-df73-49ef-8d14-108af3065b08",
+      "name": "Fetch Top Movers",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Extract top 30 gainers and losers\nconst response = $json;\n\nconst gainers = (response.top_gainers || []).slice(0, 30);\nconst losers = (response.top_losers || []).slice(0, 30);\n\n// Parse stock data\nfunction parseStock(s, type) {\n  const pct = parseFloat(String(s.change_percentage || '0').replace('%','')) || 0;\n  const vol = parseInt(s.volume) || 0;\n  return { \n    ticker: s.ticker, \n    price: parseFloat(s.price) || 0, \n    changePercent: pct, \n    volume: vol, \n    type \n  };\n}\n\n// Combine and sort by volume (highest first)\nlet all = [\n  ...gainers.map(s => parseStock(s, 'gainer')), \n  ...losers.map(s => parseStock(s, 'loser'))\n];\nall = all.sort((a, b) => b.volume - a.volume);\n\n// Get top 10 by volume\nconst top10 = all.slice(0, 10);\n\n// Return each stock as a separate item for Split in Batches\nreturn top10.map(stock => ({ json: stock }));"
+      },
+      "id": "62d1d803-994c-402b-a6ae-a2c272aa4ce2",
+      "name": "Process Movers + Extract Top10",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "id": "92e3dff7-014b-4db3-aed0-edde2ead69d2",
+      "name": "Split in Batches",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{`https://www.alphavantage.co/query?function=NEWS_SENTIMENT&tickers=${$json.ticker}&apikey=AS9OQDLEM7W82638&limit=10&sort=LATEST`}}",
+        "options": {}
+      },
+      "id": "93d91d90-bd6d-4631-ba18-ca0ab82113c1",
+      "name": "Fetch News",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Get stock info from the split batch\nconst stock = $input.item.json;\nconst ticker = stock.ticker;\n\n// Get news feed\nconst news = $json.feed || [];\n\n// Filter news from last 24 hours\nconst now = new Date();\nconst twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);\n\nconst recentNews = news.filter(article => {\n  if (!article.time_published) return false;\n  \n  // Parse YYYYMMDDTHHMMSS format\n  const year = parseInt(article.time_published.slice(0, 4));\n  const month = parseInt(article.time_published.slice(4, 6)) - 1;\n  const day = parseInt(article.time_published.slice(6, 8));\n  const hour = parseInt(article.time_published.slice(9, 11));\n  const minute = parseInt(article.time_published.slice(11, 13));\n  const second = parseInt(article.time_published.slice(13, 15));\n  \n  const articleDate = new Date(year, month, day, hour, minute, second);\n  return articleDate >= twentyFourHoursAgo;\n});\n\n// Format news data\nlet newsData = {};\nif (recentNews.length > 0) {\n  const first = recentNews[0];\n  const raw = first.summary || first.title || \"\";\n  const summary = raw.length > 200 ? raw.slice(0, 200) + \"...\" : raw;\n  \n  newsData = {\n    headline: first.title || \"\",\n    summary: summary,\n    url: first.url || \"\",\n    publishedTime: first.time_published || \"\",\n    sentiment: first.overall_sentiment_label || \"Neutral\",\n    sentimentScore: first.overall_sentiment_score || 0,\n    articlesCount: recentNews.length\n  };\n} else {\n  newsData = {\n    headline: \"No recent news in last 24h\",\n    summary: \"\",\n    url: \"\",\n    publishedTime: \"\",\n    sentiment: \"N/A\",\n    sentimentScore: 0,\n    articlesCount: 0\n  };\n}\n\n// Return stock data with news\nreturn {\n  ticker: ticker,\n  price: stock.price,\n  changePercent: stock.changePercent,\n  volume: stock.volume,\n  type: stock.type,\n  news: newsData\n};"
+      },
+      "id": "33803d77-52b9-48b2-b82a-395f7b1066de",
+      "name": "Parse News Summary",
+      "type": "n8n-nodes-base.functionItem",
+      "typeVersion": 1,
+      "position": [1050, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Aggregate all results\nconst results = items.map(item => item.json);\n\n// Sort by volume descending\nresults.sort((a, b) => b.volume - a.volume);\n\n// Create summary statistics\nconst gainers = results.filter(s => s.type === 'gainer');\nconst losers = results.filter(s => s.type === 'loser');\nconst withNews = results.filter(s => s.news.articlesCount > 0);\n\nconst summary = {\n  totalStocks: results.length,\n  gainersCount: gainers.length,\n  losersCount: losers.length,\n  stocksWithNews: withNews.length,\n  stocksWithoutNews: results.length - withNews.length,\n  generatedAt: new Date().toISOString()\n};\n\nreturn [{\n  json: {\n    summary: summary,\n    top10Movers: results\n  }\n}];"
+      },
+      "id": "31200073-1461-4bef-a5ac-71312055a53e",
+      "name": "Aggregate Results",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1250, 300]
+    }
+  ],
+  "connections": {
+    "Fetch Top Movers": {
+      "main": [
+        [
+          {
+            "node": "Process Movers + Extract Top10",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Movers + Extract Top10": {
+      "main": [
+        [
+          {
+            "node": "Split in Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split in Batches": {
+      "main": [
+        [
+          {
+            "node": "Fetch News",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Aggregate Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch News": {
+      "main": [
+        [
+          {
+            "node": "Parse News Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse News Summary": {
+      "main": [
+        [
+          {
+            "node": "Split in Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b5ce0b9aeb6c0a327d286ee770dfa21050848f1fa81b8aa51dc89d6a7e852d69"
+  }
+}
