@@ -14,55 +14,23 @@
     },
     {
       "parameters": {
-        "functionCode": "// Extract top 30 gainers and losers\nconst response = $json;\n\nconst gainers = (response.top_gainers || []).slice(0, 30);\nconst losers = (response.top_losers || []).slice(0, 30);\n\n// Parse stock data\nfunction parseStock(s, type) {\n  const pct = parseFloat(String(s.change_percentage || '0').replace('%','')) || 0;\n  const vol = parseInt(s.volume) || 0;\n  return { \n    ticker: s.ticker, \n    price: parseFloat(s.price) || 0, \n    changePercent: pct, \n    volume: vol, \n    type \n  };\n}\n\n// Combine and sort by volume (highest first)\nlet all = [\n  ...gainers.map(s => parseStock(s, 'gainer')), \n  ...losers.map(s => parseStock(s, 'loser'))\n];\nall = all.sort((a, b) => b.volume - a.volume);\n\n// Get top 10 by volume\nconst top10 = all.slice(0, 10);\n\n// Return each stock as a separate item for Split in Batches\nreturn top10.map(stock => ({ json: stock }));"
+        "functionCode": "// Extract gainers and losers\nconst response = $json;\n\nconst allGainers = (response.top_gainers || []);\nconst allLosers = (response.top_losers || []);\n\n// Parse stock data\nfunction parseStock(s, type) {\n  const pct = parseFloat(String(s.change_percentage || '0').replace('%','')) || 0;\n  const vol = parseInt(s.volume) || 0;\n  return { \n    ticker: s.ticker, \n    price: parseFloat(s.price) || 0, \n    changePercent: pct, \n    volume: vol, \n    type \n  };\n}\n\n// Parse all stocks\nconst gainers = allGainers.map(s => parseStock(s, 'gainer'));\nconst losers = allLosers.map(s => parseStock(s, 'loser'));\n\n// Sort by volume\ngainers.sort((a, b) => b.volume - a.volume);\nlosers.sort((a, b) => b.volume - a.volume);\n\n// Get top 5 gainers, top 10 losers\nconst top5Gainers = gainers.slice(0, 5);\nconst top10Losers = losers.slice(0, 10);\n\n// Get top 2 movers by volume (from all stocks)\nconst allStocks = [...gainers, ...losers];\nallStocks.sort((a, b) => b.volume - a.volume);\nconst top2Movers = allStocks.slice(0, 2);\n\n// Combine unique stocks (avoid duplicates)\nconst selectedStocks = [];\nconst tickers = new Set();\n\n// Add top 2 movers first\nfor (const stock of top2Movers) {\n  if (!tickers.has(stock.ticker)) {\n    selectedStocks.push({ ...stock, category: 'top_mover' });\n    tickers.add(stock.ticker);\n  }\n}\n\n// Add top 5 gainers\nfor (const stock of top5Gainers) {\n  if (!tickers.has(stock.ticker)) {\n    selectedStocks.push({ ...stock, category: 'top_gainer' });\n    tickers.add(stock.ticker);\n  }\n}\n\n// Add top 10 losers\nfor (const stock of top10Losers) {\n  if (!tickers.has(stock.ticker)) {\n    selectedStocks.push({ ...stock, category: 'top_loser' });\n    tickers.add(stock.ticker);\n  }\n}\n\n// Return all stocks in a single item\nreturn [{ json: { stocks: selectedStocks } }];"
       },
       "id": "62d1d803-994c-402b-a6ae-a2c272aa4ce2",
-      "name": "Process Movers + Extract Top10",
+      "name": "Select Stocks",
       "type": "n8n-nodes-base.function",
       "typeVersion": 1,
       "position": [450, 300]
     },
     {
       "parameters": {
-        "batchSize": 1,
-        "options": {}
-      },
-      "id": "92e3dff7-014b-4db3-aed0-edde2ead69d2",
-      "name": "Split in Batches",
-      "type": "n8n-nodes-base.splitInBatches",
-      "typeVersion": 3,
-      "position": [650, 300]
-    },
-    {
-      "parameters": {
-        "url": "={{`https://www.alphavantage.co/query?function=NEWS_SENTIMENT&tickers=${$json.ticker}&apikey=AS9OQDLEM7W82638&limit=10&sort=LATEST`}}",
-        "options": {}
+        "functionCode": "const stocks = $json.stocks;\nconst apiKey = 'AS9OQDLEM7W82638';\n\n// Helper function to fetch news with error handling\nasync function fetchNews(ticker) {\n  const url = `https://www.alphavantage.co/query?function=NEWS_SENTIMENT&tickers=${ticker}&apikey=${apiKey}&limit=10&sort=LATEST`;\n  \n  try {\n    const response = await fetch(url);\n    const data = await response.json();\n    return data.feed || [];\n  } catch (error) {\n    console.log(`Error fetching news for ${ticker}:`, error.message);\n    return [];\n  }\n}\n\n// Helper function to filter and format news\nfunction processNews(news) {\n  // Filter news from last 24 hours\n  const now = new Date();\n  const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);\n  \n  const recentNews = news.filter(article => {\n    if (!article.time_published) return false;\n    \n    // Parse YYYYMMDDTHHMMSS format\n    const year = parseInt(article.time_published.slice(0, 4));\n    const month = parseInt(article.time_published.slice(4, 6)) - 1;\n    const day = parseInt(article.time_published.slice(6, 8));\n    const hour = parseInt(article.time_published.slice(9, 11));\n    const minute = parseInt(article.time_published.slice(11, 13));\n    const second = parseInt(article.time_published.slice(13, 15));\n    \n    const articleDate = new Date(year, month, day, hour, minute, second);\n    return articleDate >= twentyFourHoursAgo;\n  });\n  \n  if (recentNews.length > 0) {\n    const first = recentNews[0];\n    const raw = first.summary || first.title || \"\";\n    const summary = raw.length > 200 ? raw.slice(0, 200) + \"...\" : raw;\n    \n    return {\n      headline: first.title || \"\",\n      summary: summary,\n      url: first.url || \"\",\n      publishedTime: first.time_published || \"\",\n      sentiment: first.overall_sentiment_label || \"Neutral\",\n      sentimentScore: first.overall_sentiment_score || 0,\n      articlesCount: recentNews.length\n    };\n  } else {\n    return {\n      headline: \"No recent news in last 24h\",\n      summary: \"\",\n      url: \"\",\n      publishedTime: \"\",\n      sentiment: \"N/A\",\n      sentimentScore: 0,\n      articlesCount: 0\n    };\n  }\n}\n\n// Process each stock sequentially with delay to respect API rate limits\nconst enrichedStocks = [];\n\nfor (let i = 0; i < stocks.length; i++) {\n  const stock = stocks[i];\n  \n  // Fetch news for this stock\n  const news = await fetchNews(stock.ticker);\n  const newsData = processNews(news);\n  \n  // Add enriched stock to results\n  enrichedStocks.push({\n    ...stock,\n    news: newsData\n  });\n  \n  // Rate limiting: wait 13 seconds between requests (5 requests per minute max for free tier)\n  if (i < stocks.length - 1) {\n    await new Promise(resolve => setTimeout(resolve, 13000));\n  }\n}\n\n// Group by category\nconst topMovers = enrichedStocks.filter(s => s.category === 'top_mover');\nconst topGainers = enrichedStocks.filter(s => s.category === 'top_gainer');\nconst topLosers = enrichedStocks.filter(s => s.category === 'top_loser');\n\n// Count stocks with news\nconst withNews = enrichedStocks.filter(s => s.news && s.news.articlesCount > 0);\n\nconst summary = {\n  totalStocks: enrichedStocks.length,\n  topMoversCount: topMovers.length,\n  topGainersCount: topGainers.length,\n  topLosersCount: topLosers.length,\n  stocksWithNews: withNews.length,\n  stocksWithoutNews: enrichedStocks.length - withNews.length,\n  generatedAt: new Date().toISOString()\n};\n\nreturn [{\n  json: {\n    summary: summary,\n    topMovers: topMovers,\n    topGainers: topGainers,\n    topLosers: topLosers,\n    allStocks: enrichedStocks\n  }\n}];"
       },
       "id": "93d91d90-bd6d-4631-ba18-ca0ab82113c1",
-      "name": "Fetch News",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 1,
-      "position": [850, 300]
-    },
-    {
-      "parameters": {
-        "functionCode": "// Get stock info from the split batch\nconst stock = $input.item.json;\nconst ticker = stock.ticker;\n\n// Get news feed\nconst news = $json.feed || [];\n\n// Filter news from last 24 hours\nconst now = new Date();\nconst twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);\n\nconst recentNews = news.filter(article => {\n  if (!article.time_published) return false;\n  \n  // Parse YYYYMMDDTHHMMSS format\n  const year = parseInt(article.time_published.slice(0, 4));\n  const month = parseInt(article.time_published.slice(4, 6)) - 1;\n  const day = parseInt(article.time_published.slice(6, 8));\n  const hour = parseInt(article.time_published.slice(9, 11));\n  const minute = parseInt(article.time_published.slice(11, 13));\n  const second = parseInt(article.time_published.slice(13, 15));\n  \n  const articleDate = new Date(year, month, day, hour, minute, second);\n  return articleDate >= twentyFourHoursAgo;\n});\n\n// Format news data\nlet newsData = {};\nif (recentNews.length > 0) {\n  const first = recentNews[0];\n  const raw = first.summary || first.title || \"\";\n  const summary = raw.length > 200 ? raw.slice(0, 200) + \"...\" : raw;\n  \n  newsData = {\n    headline: first.title || \"\",\n    summary: summary,\n    url: first.url || \"\",\n    publishedTime: first.time_published || \"\",\n    sentiment: first.overall_sentiment_label || \"Neutral\",\n    sentimentScore: first.overall_sentiment_score || 0,\n    articlesCount: recentNews.length\n  };\n} else {\n  newsData = {\n    headline: \"No recent news in last 24h\",\n    summary: \"\",\n    url: \"\",\n    publishedTime: \"\",\n    sentiment: \"N/A\",\n    sentimentScore: 0,\n    articlesCount: 0\n  };\n}\n\n// Return stock data with news\nreturn {\n  ticker: ticker,\n  price: stock.price,\n  changePercent: stock.changePercent,\n  volume: stock.volume,\n  type: stock.type,\n  news: newsData\n};"
-      },
-      "id": "33803d77-52b9-48b2-b82a-395f7b1066de",
-      "name": "Parse News Summary",
-      "type": "n8n-nodes-base.functionItem",
-      "typeVersion": 1,
-      "position": [1050, 300]
-    },
-    {
-      "parameters": {
-        "functionCode": "// Aggregate all results\nconst results = items.map(item => item.json);\n\n// Sort by volume descending\nresults.sort((a, b) => b.volume - a.volume);\n\n// Create summary statistics\nconst gainers = results.filter(s => s.type === 'gainer');\nconst losers = results.filter(s => s.type === 'loser');\nconst withNews = results.filter(s => s.news.articlesCount > 0);\n\nconst summary = {\n  totalStocks: results.length,\n  gainersCount: gainers.length,\n  losersCount: losers.length,\n  stocksWithNews: withNews.length,\n  stocksWithoutNews: results.length - withNews.length,\n  generatedAt: new Date().toISOString()\n};\n\nreturn [{\n  json: {\n    summary: summary,\n    top10Movers: results\n  }\n}];"
-      },
-      "id": "31200073-1461-4bef-a5ac-71312055a53e",
-      "name": "Aggregate Results",
+      "name": "Fetch News and Aggregate",
       "type": "n8n-nodes-base.function",
       "typeVersion": 1,
-      "position": [1250, 300]
+      "position": [650, 300]
     }
   ],
   "connections": {
@@ -70,58 +38,18 @@
       "main": [
         [
           {
-            "node": "Process Movers + Extract Top10",
+            "node": "Select Stocks",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Process Movers + Extract Top10": {
+    "Select Stocks": {
       "main": [
         [
           {
-            "node": "Split in Batches",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Split in Batches": {
-      "main": [
-        [
-          {
-            "node": "Fetch News",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Aggregate Results",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Fetch News": {
-      "main": [
-        [
-          {
-            "node": "Parse News Summary",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Parse News Summary": {
-      "main": [
-        [
-          {
-            "node": "Split in Batches",
+            "node": "Fetch News and Aggregate",
             "type": "main",
             "index": 0
           }
