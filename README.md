@@ -43,6 +43,13 @@ Collection of n8n agents, workflows, templates, and automations created and main
 
 ## n8n AI Workflows & Automations
 
+- [meta_ad_audit_agency_sales_deck_generator.json](https://www.youtube.com/watch?v=Nj-6lBRRYww) - Turns any brand's Meta Ad Library into an automated sales deck. Takes a brand website URL and Meta Ads Library URL, scrapes active ad creatives using Apify, runs a full creative audit with Gemini 3.1 Pro (passing all ad images and videos as inline context), and automatically generates a polished PowerPoint sales presentation using the Gamma API. Built for ad creative agencies and freelancers who use the free audit to close new clients.
+  - **Scrapes brand context** from the brand's homepage using Firecrawl (colors, fonts, OG image, brand tone, homepage content)
+  - **Pulls active Meta Ads** using the Apify Facebook Ads Library Scraper, handles VIDEO, IMAGE, CAROUSEL, and DCO formats
+  - **Uploads ad media to tmpfiles.org** for stable hosted URLs, aggregates with MD5 deduplication before passing to Gemini
+  - **Runs an 8-section creative audit** with Gemini 3.1 Pro covering creative mix, visual design, messaging, strengths, gaps, competitive context, and a ranked action plan
+  - **Generates a branded sales deck** via Gamma API exported as PowerPoint, with real ad creatives and brand identity embedded in the slides
+
 - [ai_scraping_pipeline.json](https://www.youtube.com/watch?v=2uwV4aUyGIg) - Uses Google News, Firecrawl, and rss.app to scrape virtually any piece of web content and transform it into LLM-ready output.
 - [twitter_reply_guy_agent.json](https://www.youtube.com/watch?v=Q_b5uPndsLY) - Uses a Mention.com Twitter / X keyword monitoring feed to monitor incoming Twitter posts for certain keywords then uses AI to evaluate and post a reply.
 - [firecrawl_email_scraper.json](https://www.youtube.com/watch?v=zasYpLeMV9g) - Uses firecrawl `/map` and `/scrape` endpoints to scrape all email addresses from a given website.

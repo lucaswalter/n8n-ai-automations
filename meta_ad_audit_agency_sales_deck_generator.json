@@ -1,0 +1,566 @@
+{
+  "name": "Agency Sales Deck Automation: Meta Ad Audit → Gemini Analysis → Gamma Deck",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Meta Ads Competitive Analysis",
+        "formDescription": "Analyze competitor Meta ads and generate a presentation",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Brand Website URL",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Meta Ads Library URL",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "786cda3b-0374-4e4e-98a1-0574b41b0c83",
+      "name": "form_trigger",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.5,
+      "position": [
+        208,
+        -256
+      ],
+      "webhookId": "0c4c2402-7c87-4354-9898-a242173b0267"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.firecrawl.dev/v2/scrape",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "firecrawlApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"url\": \"{{ $json['Brand Website URL'] }}\",\n  \"formats\": [\n      \"branding\",\n      \"markdown\"\n    ]\n}\n",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "ed20287f-fbf7-4e2d-a327-afeaee7bd1cf",
+      "name": "scrape_brand_website",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        432,
+        -256
+      ],
+      "credentials": {
+        "firecrawlApi": {
+          "id": "tTXd52Qm4ZR6N7sq",
+          "name": "Firecrawl"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "Run actor and get dataset",
+        "actorId": {
+          "__rl": true,
+          "value": "JJghSZmShuco4j9gJ",
+          "mode": "list",
+          "cachedResultName": "Facebook Ads Library Scraper (apify/facebook-ads-scraper)",
+          "cachedResultUrl": "https://console.apify.com/actors/JJghSZmShuco4j9gJ/input"
+        },
+        "customBody": "={\n    \"includeAboutPage\": false,\n    \"isDetailsPerAd\": false,\n    \"onlyTotal\": false,\n    \"resultsLimit\": 10,\n    \"startUrls\": [\n        {\n            \"url\": \"{{ $('form_trigger').item.json['Meta Ads Library URL'] }}\"\n        }\n    ]\n}",
+        "authentication": "apifyOAuth2Api"
+      },
+      "id": "bef3a98d-0702-4749-ab03-3cd79034a1b0",
+      "name": "scrape_meta_ads_library",
+      "type": "@apify/n8n-nodes-apify.apify",
+      "typeVersion": 1,
+      "position": [
+        656,
+        -256
+      ],
+      "credentials": {
+        "apifyOAuth2Api": {
+          "id": "H654WxAlFsyNy0MJ",
+          "name": "Apify"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract primary media URL and type from each ad\nconst items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  const ad = item.json;\n  const snapshot = ad.snapshot || {};\n  const displayFormat = (snapshot.displayFormat || '').toUpperCase();\n\n  let primaryMediaUrl = null;\n  let mediaType = null;\n  let mediaFileExtension = null;\n\n  if (displayFormat === 'VIDEO') {\n    // Video ads: grab from snapshot.videos[]\n    const video = (snapshot.videos || [])[0];\n    if (video) {\n      primaryMediaUrl = video.videoHdUrl || video.videoSdUrl || null;\n      mediaType = 'video';\n      mediaFileExtension = 'mp4';\n    }\n  } else if (displayFormat === 'IMAGE') {\n    // Image ads: grab from snapshot.images[]\n    const image = (snapshot.images || [])[0];\n    if (image) {\n      primaryMediaUrl = image.originalImageUrl || image.resizedImageUrl || null;\n      mediaType = 'image';\n      mediaFileExtension = 'jpg';\n    }\n  } else if (displayFormat === 'CAROUSEL' || displayFormat === 'DCO') {\n    // Carousel/DCO ads: grab first card image\n    const card = (snapshot.cards || [])[0];\n    if (card) {\n      primaryMediaUrl = card.originalImageUrl || card.resizedImageUrl || null;\n      mediaType = 'image';\n      mediaFileExtension = 'jpg';\n    }\n  } else {\n    // Fallback: check cards, then images, then videos\n    const card = (snapshot.cards || [])[0];\n    const image = (snapshot.images || [])[0];\n    const video = (snapshot.videos || [])[0];\n\n    if (card && (card.originalImageUrl || card.resizedImageUrl)) {\n      primaryMediaUrl = card.originalImageUrl || card.resizedImageUrl;\n      mediaType = 'image';\n      mediaFileExtension = 'jpg';\n    } else if (image && (image.originalImageUrl || image.resizedImageUrl)) {\n      primaryMediaUrl = image.originalImageUrl || image.resizedImageUrl;\n      mediaType = 'image';\n      mediaFileExtension = 'jpg';\n    } else if (video && (video.videoHdUrl || video.videoSdUrl)) {\n      primaryMediaUrl = video.videoHdUrl || video.videoSdUrl;\n      mediaType = 'video';\n      mediaFileExtension = 'mp4';\n    }\n  }\n\n  results.push({\n    json: {\n      ...ad,\n      primaryMediaUrl,\n      mediaType,\n      mediaFileExtension,\n      displayFormat\n    }\n  });\n}\n\nreturn results;"
+      },
+      "id": "42fd97f6-a02c-4bfc-bd3b-5793342cdaf7",
+      "name": "extract_primary_media",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        880,
+        -256
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.primaryMediaUrl }}",
+        "options": {
+          "redirect": {
+            "redirect": {}
+          },
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "id": "21a65259-988f-4e6b-b515-7baf10ed592b",
+      "name": "download_media_file",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        896,
+        -48
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ contents: [{ parts: [...$('aggregate_media').first().json.mediaList.map(m => ({ inline_data: { mime_type: m.mimeType, data: m.base64 } })), { text: $json.prompt }] }], generationConfig: { temperature: 0.7, maxOutputTokens: 8192 } }) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        432,
+        -64
+      ],
+      "id": "7b53c122-ec87-4e20-9314-bea0b42faf1c",
+      "name": "analyze_meda_ads",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "abcMckGk9RG9i0Ba",
+          "name": "Google Gemini"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const crypto = require('crypto');\nconst items = $input.all();\nconst mediaList = [];\nconst seen = new Set();\n\nfor (let i = 0; i < items.length; i++) {\n  const bin = items[i].binary?.data;\n  const ad = $('extract_primary_media').all()[i]?.json;\n\n  if (bin) {\n    const buffer = await this.helpers.getBinaryDataBuffer(i, 'data');\n    const hash = crypto.createHash('md5').update(buffer).digest('hex');\n\n    if (!seen.has(hash)) {\n      seen.add(hash);\n      mediaList.push({\n        mimeType: ad?.mediaType === 'video' ? 'video/mp4' : 'image/jpeg',\n        base64: buffer.toString('base64')\n      });\n    }\n  }\n}\n\nreturn [{ json: { mediaList, totalItems: mediaList.length, deduped: items.length - mediaList.length } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1216,
+        -48
+      ],
+      "id": "704a2e6f-aaab-4827-918e-31599e39d661",
+      "name": "aggregate_media"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://public-api.gamma.app/v1.0/generations/",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"textMode\": \"generate\",\n  \"exportAs\": \"pptx\",\n  \"inputText\": {{ JSON.stringify($json.prompt)}}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        208,
+        160
+      ],
+      "id": "c6197cfe-760f-468f-9595-355d91454492",
+      "name": "generate_gamma_presentation",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "wOLTppRlRDvyFw9I",
+          "name": "Gamma API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://tmpfiles.org/api/v1/upload",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "file",
+              "inputDataFieldName": "data"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1216,
+        -256
+      ],
+      "id": "d92ab317-7a4a-4c7c-9fd5-622d6e2f7e58",
+      "name": "upload_images"
+    },
+    {
+      "parameters": {
+        "mode": "chooseBranch",
+        "useDataOfInput": 2
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1520,
+        -64
+      ],
+      "id": "472595ec-c74f-421a-af3b-f071103b5fac",
+      "name": "merge"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "892487f9-d975-4511-9bed-258905289902",
+              "name": "=prompt",
+              "value": "=You are a Senior Creative Strategist at a top-tier performance marketing agency that manages $50M+ in annual Meta ad spend across DTC, SaaS, and fintech verticals. You have 10+ years of experience auditing ad accounts and building creative strategies that scale.\n\nA prospective client has asked your agency to audit their current Meta ad creative program. Your job is to produce a thorough, honest, and actionable Creative Audit Report based on:\n\n1. Their brand guidelines and website data (provided below)\n2. Their currently active ad creatives (attached as images/videos)\n\nThis audit will be used internally to build a client-facing presentation, so be detailed and structured. Write in a professional but direct tone — like you're briefing your team before a pitch meeting.\n\n---\n\n## BRAND CONTEXT\n\n{{ $('scrape_brand_website').item.json.data.metadata.title }}\nWebsite: {{ $('scrape_brand_website').item.json.data.metadata.sourceURL }}\nDescription: {{ $('scrape_brand_website').item.json.data.metadata.description }}\n\nBrand Colors: Primary {{ $('scrape_brand_website').item.json.data.branding.colors.primary }} | Accent {{ $('scrape_brand_website').item.json.data.branding.colors.accent }} | Background {{ $('scrape_brand_website').item.json.data.branding.colors.background }}\nTypography: {{ $('scrape_brand_website').item.json.data.branding.typography.fontFamilies.heading }} (headings), {{ $('scrape_brand_website').item.json.data.branding.typography.fontFamilies.primary }} (body)\nBrand Tone: {{ $('scrape_brand_website').item.json.data.branding.personality.tone }} | Energy: {{ $('scrape_brand_website').item.json.data.branding.personality.energy }}\nTarget Audience: {{ $('scrape_brand_website').item.json.data.branding.personality.targetAudience }}\nCTA Style: {{ $('scrape_brand_website').item.json.data.branding.components.buttonPrimary.background }} button, {{ $('scrape_brand_website').item.json.data.branding.components.buttonPrimary.textColor }} text\n\n## CURRENT META AD URLS\n\n```\n{{ $('upload_images').all().map(item => item.json.data.url).join('\\n') }}\n\n```\n\n\n## BRAND WEBSITE HOME PAGE CONTENT\n\n{{ $('scrape_brand_website').item.json.data.markdown }}\n\n---\n\n## YOUR AUDIT SHOULD COVER\n\n### 1. Executive Overview\n2-3 paragraphs. What's your first impression of this ad account's creative program? How sophisticated is it? What stage of creative maturity are they at (early/testing, scaling, optimized, stale)?\n\n### 2. Creative Mix & Format Analysis\n- What formats are in rotation (static image, video, carousel, DCO)?\n- Is the format mix appropriate for their goals and audience?\n- What's missing from the format mix that should be tested?\n- Are there signs of creative fatigue (same assets running too long, low variation)?\n\n### 3. Visual & Design Assessment\nFor each creative provided, evaluate:\n- Production quality (DIY vs. professional, polished vs. rough)\n- Thumb-stop power — would this stop a scroll in a crowded feed?\n- Brand consistency — does it match their website's visual identity (colors, fonts, style)?\n- Information hierarchy — is the most important message immediately clear?\n- Use of text overlays, contrast, whitespace\n- Emotional register — what feeling does this creative evoke?\n\n### 4. Messaging & Copy Breakdown\n- What core value propositions are being communicated?\n- What copy frameworks are in use (problem-agitate-solve, social proof, urgency, benefit-led, etc.)?\n- Headline patterns — variety, length, hooks\n- Body copy effectiveness — is it scannable? persuasive? specific?\n- CTA analysis — what CTAs are used, are they compelling?\n- Is there message-match between the ad copy and the likely landing page?\n\n### 5. Strategic Strengths\nWhat is this account doing well? Be specific — reference individual creatives. What should they absolutely keep doing and double down on?\n\n### 6. Critical Weaknesses & Gaps\nWhere are the biggest problems? Be honest and specific:\n- Creative angles not being explored\n- Audience segments not addressed\n- Formats underutilized\n- Messaging blind spots\n- Brand consistency issues\n- Production quality concerns\n\n### 7. Competitive Context\nBased on what you know about Meta advertising best practices in their vertical, how does this creative program compare to what top performers typically run? What proven creative strategies are they leaving on the table?\n\n### 8. Priority Action Plan (Top 5)\nRank the 5 highest-impact changes they should make. For each:\n- What to do (specific and actionable)\n- Why it matters (expected impact)\n- How to execute (brief tactical guidance)\n- Priority level (quick win vs. strategic investment)\n\n---\n\nIMPORTANT: Reference specific creatives in your analysis (e.g., \"the static image featuring X\" or \"the video ad showing Y\"). Your assessments must be grounded in what you actually see in the attached media — do not make generic observations. This audit needs to feel like it was written by someone who carefully reviewed every asset.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        208,
+        -64
+      ],
+      "id": "17fac620-3eab-462e-8080-dda0c6d632c3",
+      "name": "build_gemini_prompt"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "27102f4a-4373-4740-b199-b6be0eab9382",
+              "name": "prompt",
+              "value": "=Create a polished, professional sales presentation for a performance marketing agency pitching their creative strategy services to a prospective client. This deck is the follow-up to a creative audit the agency performed on the prospect's current Meta ad account.\n\nThe tone should be: confident but not arrogant, data-informed, consultative. Think \"trusted advisor\" not \"used car salesman.\" The agency has clearly done their homework, and this deck proves it.\n\n---\n\n## CREATIVE AUDIT FINDINGS (from our analysis)\n\n{{ $json.candidates[0].content.parts[0].text }}\n\n---\n\n## BRAND CONTEXT\n\n{{ $('scrape_brand_website').item.json.data.metadata.title }}\nWebsite: {{ $('scrape_brand_website').item.json.data.metadata.sourceURL }}\nDescription: {{ $('scrape_brand_website').item.json.data.metadata.description }}\n\nBrand Colors: Primary {{ $('scrape_brand_website').item.json.data.branding.colors.primary }} | Accent {{ $('scrape_brand_website').item.json.data.branding.colors.accent }} | Background {{ $('scrape_brand_website').item.json.data.branding.colors.background }}\nTypography: {{ $('scrape_brand_website').item.json.data.branding.typography.fontFamilies.heading }} (headings), {{ $('scrape_brand_website').item.json.data.branding.typography.fontFamilies.primary }} (body)\nBrand Tone: {{ $('scrape_brand_website').item.json.data.branding.personality.tone }} | Energy: {{ $('scrape_brand_website').item.json.data.branding.personality.energy }}\nTarget Audience: {{ $('scrape_brand_website').item.json.data.branding.personality.targetAudience }}\nCTA Style: {{ $('scrape_brand_website').item.json.data.branding.components.buttonPrimary.background }} button, {{ $('scrape_brand_website').item.json.data.branding.components.buttonPrimary.textColor }} text\n\n## CURRENT META AD CREATIVE URLS — IMPORTANT INSTRUCTIONS\n\nThe URLs below are the REAL ad creatives currently running in the prospect's Meta ad account. These are hosted image files — NOT prompts for image generation.\n\n**YOU MUST:**\n- Embed these images directly in the presentation by referencing their URLs\n- Use these EXACT URLs as image sources — do not modify, regenerate, or substitute them\n- Display them at a large, readable size (not thumbnails)\n- DO NOT generate, create, or AI-produce any replacement images for these ads\n- DO NOT use placeholder images or stock photos in place of these URLs\n- Every slide that discusses a specific ad MUST include that ad's actual image from the URLs below\n\n\n```\n{{ $('upload_images').all().map(item => item.json.data.url).join('\\n') }}\n\n```\n\nAnd You MUST Use This Brand Icon Image on the First Slide of the presentation. Make sure it is scaled appropriately.\n\n```\n{{ $('scrape_brand_website').item.json.data.branding.images.ogImage }}\n```\n\n",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        656,
+        -64
+      ],
+      "id": "ca09c95e-bb7c-4c1b-b2bd-245f8e748a96",
+      "name": "build_gamma_prompt"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        448,
+        160
+      ],
+      "id": "d1f134f2-7386-4f35-ae8c-809a3e9e279e",
+      "name": "wait",
+      "webhookId": "1f577d0d-f490-449e-807b-50305ba48cbc"
+    },
+    {
+      "parameters": {
+        "url": "=https://public-api.gamma.app/v1.0/generations/{{ $('generate_gamma_presentation').item.json.generationId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        608,
+        160
+      ],
+      "id": "0f0d0e4f-0979-4cf3-86f5-9864abf45a8c",
+      "name": "get_gamma_presentation",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "wOLTppRlRDvyFw9I",
+          "name": "Gamma API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "b3550403-83c6-4d09-bd48-63c12ffc2a35",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "completed",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        784,
+        160
+      ],
+      "id": "96dd21c4-c6ab-43c2-a2e4-1ecac620a708",
+      "name": "check_completed"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "4bca9cc3-7aa0-416c-a724-0c6783b4f9a1",
+              "name": "result",
+              "value": "={{ $json.gammaUrl }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1072,
+        144
+      ],
+      "id": "59575308-e625-4ee4-a077-02efce336070",
+      "name": "set_result"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "form_trigger": {
+      "main": [
+        [
+          {
+            "node": "scrape_brand_website",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "scrape_brand_website": {
+      "main": [
+        [
+          {
+            "node": "scrape_meta_ads_library",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "scrape_meta_ads_library": {
+      "main": [
+        [
+          {
+            "node": "extract_primary_media",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "extract_primary_media": {
+      "main": [
+        [
+          {
+            "node": "download_media_file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "download_media_file": {
+      "main": [
+        [
+          {
+            "node": "upload_images",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "aggregate_media",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "aggregate_media": {
+      "main": [
+        [
+          {
+            "node": "merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "analyze_meda_ads": {
+      "main": [
+        [
+          {
+            "node": "build_gamma_prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "upload_images": {
+      "main": [
+        [
+          {
+            "node": "merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "merge": {
+      "main": [
+        [
+          {
+            "node": "build_gemini_prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "build_gemini_prompt": {
+      "main": [
+        [
+          {
+            "node": "analyze_meda_ads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "build_gamma_prompt": {
+      "main": [
+        [
+          {
+            "node": "generate_gamma_presentation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "generate_gamma_presentation": {
+      "main": [
+        [
+          {
+            "node": "wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "wait": {
+      "main": [
+        [
+          {
+            "node": "get_gamma_presentation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_gamma_presentation": {
+      "main": [
+        [
+          {
+            "node": "check_completed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check_completed": {
+      "main": [
+        [
+          {
+            "node": "set_result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "aafcecee-7d60-46ab-8ef2-cf6f07a825e1",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "06e5009344f682419c20ccd4ecdcb5223bbb91761882af93ac6d468dbc2cbf8d"
+  },
+  "id": "7mthcJCcLny0XOsY",
+  "tags": []
+}
